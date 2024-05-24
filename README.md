@@ -185,7 +185,7 @@ Add the following keyword definition
   KEYWORD(jwacc);
 ```
 
-to the file `$LLVM/lib/AsmParser/LLLexer.cpp`.
+to the file `$LLVM/lib/AsmParser/LLLexer.cpp` (again, following `KEYWORD(swifttailcc);`).
 
 #### `LLParser.cpp`
 
@@ -322,14 +322,16 @@ recognize the **JWA** convention.
 
 #### `X86ISelLowering.cpp`
 
-In the file `$LLVM/lib/Target/X86/X86ISelLowering.cpp`, we need to add
+In the file `$LLVM/lib/Target/X86/X86ISelLoweringCall.cpp`, we need to add
 a check for **JWA** to the function `canGuaranteeTCO`.
 
 ``` c++
+static bool canGuaranteeTCO(CallingConv::ID CC) {
   return (CC == CallingConv::Fast || CC == CallingConv::GHC ||
           CC == CallingConv::X86_RegCall || CC == CallingConv::HiPE ||
-          CC == CallingConv::HHVM || CC == CallingConv::Tail ||
-          CC == CallingConv::SwiftTail || CC == CallingConv::JWA);
+          CC == CallingConv::Tail || CC == CallingConv::SwiftTail ||
+          CC == CallingConv::JWA);
+}
 ```
 
 #### `X86RegisterInfo.cpp`
@@ -441,14 +443,15 @@ following statement before the final return:
 
 And in the function `AArch64FastISel::selectRet`, replace the statement
 ``` c++
-    CCAssignFn *RetCC = CC == CallingConv::WebKit_JS ? RetCC_AArch64_WebKit_JS
-                                                     : RetCC_AArch64_AAPCS;
+    CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_AAPCS);
 ```
 with
 ``` c++
-    CCAssignFn *RetCC = CC == CallingConv::WebKit_JS ? RetCC_AArch64_WebKit_JS
-                      : CC == CallingConv::JWA       ? RetCC_AArch64_JWA
-                      : RetCC_AArch64_AAPCS;
+    if (CC == CallingConv::JWA) {
+        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_JWA)
+    } else {
+        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_AAPCS);
+    }
 ```
 
 #### `AArch64RegisterInfo.cpp`
@@ -492,17 +495,11 @@ file.  In the method `AArch64TargetLowering::CCAssignFnForCall`, add the case
     return CC_AArch64_JWA;
 ```
 
-Replace the body of `AArch64TargetLowering::CCAssignFnForReturn` with the following
-`switch` statement:
+Add the following case to the `switch` statement in
+`AArch64TargetLowering::CCAssignFnForReturn`:
 ``` c++
-  switch (CC) {
-  case CallingConv::WebKit_JS:
-    return RetCC_AArch64_WebKit_JS;
   case CallingConv::JWA:
     return RetCC_AArch64_JWA;
-  default:
-    return RetCC_AArch64_AAPCS;
-  }
 ```
 
 Lastly, change the function `canGuaranteeTCO` to the following:
@@ -513,22 +510,6 @@ static bool canGuaranteeTCO(CallingConv::ID CC, bool GuaranteeTailCalls) {
          CC == CallingConv::JWA;
 }
 ```
-
-In LLVM 11 and earlier, there are a number of functions where the return calling-convention function is
-computed by testing the calling convention:
-`AArch64TargetLowering::LowerCallResult`,
-`AArch64TargetLowering::CanLowerReturn`, and
-`AArch64TargetLowering::LowerReturn`.  For these, the expression
-``` c++
-  CCAssignFn *RetCC = CCAssignFnForReturnCallConv == CallingConv::WebKit_JS
-                          ? RetCC_AArch64_WebKit_JS
-                          : RetCC_AArch64_AAPCS;
-```
-should be replaced by
-``` c++
-  CCAssignFn *RetCC = CCAssignFnForReturn (CallConv);
-```
-This change is not necessary for LLVM 12+.
 
 #### `AArch64FrameLowering.cpp`
 
