@@ -448,7 +448,7 @@ And in the function `AArch64FastISel::selectRet`, replace the statement
 with
 ``` c++
     if (CC == CallingConv::JWA) {
-        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_JWA)
+        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_JWA);
     } else {
         CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_AAPCS);
     }

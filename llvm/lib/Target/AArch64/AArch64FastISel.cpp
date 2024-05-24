@@ -3859,7 +3859,7 @@ bool AArch64FastISel::selectRet(const Instruction *I) {
     SmallVector<CCValAssign, 16> ValLocs;
     CCState CCInfo(CC, F.isVarArg(), *FuncInfo.MF, ValLocs, I->getContext());
     if (CC == CallingConv::JWA) {
-        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_JWA)
+        CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_JWA);
     } else {
         CCInfo.AnalyzeReturn(Outs, RetCC_AArch64_AAPCS);
     }
