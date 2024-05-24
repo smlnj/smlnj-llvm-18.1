@@ -1,0 +1,49 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# clangd cache
+.cache
+
+# macOS
+.DS_Store
+
+# project files
+bin
+build
+cfgc/src/cfgc
+cfgc/tests/*.s
+cfgc/tests/*.ll
+cfgc/tests/*.o
+include
+lib
+
