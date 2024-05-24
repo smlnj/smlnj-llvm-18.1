@@ -44,6 +44,6 @@ cfgc/src/cfgc
 cfgc/tests/*.s
 cfgc/tests/*.ll
 cfgc/tests/*.o
-include
-lib
+/include
+/lib
 
