@@ -12,7 +12,7 @@
 #ifndef _TARGET_INFO_HPP_
 #define _TARGET_INFO_HPP_
 
-#include "llvm/ADT/Triple.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include <string>
 

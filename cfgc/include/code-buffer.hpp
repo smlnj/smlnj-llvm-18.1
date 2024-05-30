@@ -63,7 +63,7 @@ using frag_kind = CFG::frag_kind;
 /// as information about the target architecture.  It is passed as an argument to
 /// all of the `codegen` methods in the CFG representation.
 //
-class code_buffer {
+class code_buffer : public llvm::LLVMContext {
   public:
 
   // create the code buffer for the given target
@@ -214,7 +214,7 @@ class code_buffer {
     Value *asPtr (Value *v)
     {
 	auto ty = v->getType();
-        if (! ty->isOpaquePointerTy()) {
+        if (! ty->isPointerTy()) {
             if (ty->isIntegerTy()) {
 	        return this->_builder.CreateIntToPtr(v, this->ptrTy);
             } else {
@@ -362,7 +362,7 @@ class code_buffer {
   // create a fresh basic block in the current function
     llvm::BasicBlock *newBB (const llvm::Twine &name="")
     {
-	return llvm::BasicBlock::Create (this->_context, name, this->_curFn);
+	return llvm::BasicBlock::Create (*this, name, this->_curFn);
     }
 
   // return the block address for a basic block in the current function
@@ -430,7 +430,7 @@ class code_buffer {
 		this->_builder.CreateCall(
 		    this->_readReg->getFunctionType(),
 		    this->_readReg,
-		    { llvm::MetadataAsValue::get(this->_context, this->_spRegMD) }),
+		    { llvm::MetadataAsValue::get(*this, this->_spRegMD) }),
 		this->iConst(offset)));
 
     }
@@ -754,7 +754,6 @@ class code_buffer {
 
   private:
     struct target_info const	*_target;
-    llvm::LLVMContext		_context;
     llvm::IRBuilder<>		_builder;
     class mc_gen		*_gen;
     llvm::Module		*_module;	// current module

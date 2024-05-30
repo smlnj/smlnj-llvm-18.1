@@ -44,22 +44,23 @@ code_buffer *code_buffer::create (std::string const & target)
 }
 
 code_buffer::code_buffer (target_info const *target)
-  : _target(target),
-    _context(), _builder(this->_context),
+  : LLVMContext(),
+    _target(target),
+    _builder(*this),
     _gen(nullptr),
   // initialize the register info
     _regInfo(target),
     _regState(this->_regInfo)
 {
-    this->_gen = new mc_gen (this->_context, target),
+    this->_gen = new mc_gen (*this, target),
 
   // initialize the standard types that we use
-    this->i8Ty = llvm::IntegerType::get (this->_context, 8);
-    this->i16Ty = llvm::IntegerType::get (this->_context, 16);
-    this->i32Ty = llvm::IntegerType::get (this->_context, 32);
-    this->i64Ty = llvm::IntegerType::get (this->_context, 64);
-    this->f32Ty = Type::getPrimitiveType (this->_context, Type::FloatTyID);
-    this->f64Ty = Type::getPrimitiveType (this->_context, Type::DoubleTyID);
+    this->i8Ty = llvm::IntegerType::get (*this, 8);
+    this->i16Ty = llvm::IntegerType::get (*this, 16);
+    this->i32Ty = llvm::IntegerType::get (*this, 32);
+    this->i64Ty = llvm::IntegerType::get (*this, 64);
+    this->f32Ty = Type::getPrimitiveType (*this, Type::FloatTyID);
+    this->f64Ty = Type::getPrimitiveType (*this, Type::DoubleTyID);
 
     if (this->_target->wordSz == 32) {
 	this->intTy = this->i32Ty;
@@ -70,9 +71,9 @@ code_buffer::code_buffer (target_info const *target)
 	this->_wordSzB = 8;
     }
 
-    this->ptrTy = llvm::PointerType::getUnqual(this->_context);
+    this->ptrTy = llvm::PointerType::getUnqual(*this);
     this->mlValueTy = this->ptrTy;
-    this->voidTy = Type::getVoidTy (this->_context);
+    this->voidTy = Type::getVoidTy (*this);
 
   // "call-gc" types
     {
@@ -106,7 +107,7 @@ code_buffer::code_buffer (target_info const *target)
 
 void code_buffer::beginModule (std::string const & src, int nClusters)
 {
-    this->_module = new llvm::Module (src, this->_context);
+    this->_module = new llvm::Module (src, *this);
 
     this->_gen->beginModule (this->_module);
 
@@ -489,8 +490,8 @@ void code_buffer::_initSPAccess ()
     assert ((this->_readReg == nullptr) && (this->_spRegMD == nullptr));
     this->_readReg = _getIntrinsic (llvm::Intrinsic::read_register, this->intTy);
     this->_spRegMD = llvm::MDNode::get (
-	this->_context,
-	llvm::MDString::get(this->_context, this->_target->spName));
+	*this,
+	llvm::MDString::get(*this, this->_target->spName));
 
 }
 
@@ -585,10 +586,10 @@ void code_buffer::callGC (
 // the true branch and is in the range 1..999.
 llvm::MDNode *code_buffer::branchProb (int prob)
 {
-    auto name = llvm::MDString::get(this->_context, "branch_weights");
+    auto name = llvm::MDString::get(*this, "branch_weights");
     auto trueProb = llvm::ValueAsMetadata::get(this->i32Const(prob));
     auto falseProb = llvm::ValueAsMetadata::get(this->i32Const(1000 - prob));
-    auto tpl = llvm::MDTuple::get(this->_context, {name, trueProb, falseProb});
+    auto tpl = llvm::MDTuple::get(*this, {name, trueProb, falseProb});
 
     return tpl;
 

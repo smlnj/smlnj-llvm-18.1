@@ -25,7 +25,7 @@
 #include "llvm/Transforms/Scalar/SCCP.h"
 #include "llvm/Transforms/Scalar/SimplifyCFG.h"
 #include "llvm/Support/SmallVectorMemoryBuffer.h"
-#include "llvm/Support/Host.h"
+#include "llvm/TargetParser/Host.h"
 #include "llvm/Support/FileSystem.h"
 
 #include <iostream>
