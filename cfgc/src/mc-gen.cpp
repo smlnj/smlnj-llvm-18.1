@@ -15,6 +15,7 @@
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/IR/LegacyPassManager.h" /* needed for code gen */
 #include "llvm/Passes/OptimizationLevel.h"
+#include "llvm/Support/CodeGen.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar/DCE.h"
 #include "llvm/Transforms/Scalar/DivRemPairs.h"
@@ -75,7 +76,7 @@ llvm::dbgs() << "host CPU = " << llvm::sys::getHostCPUName() << "\n";
 	tgtOptions,
 	llvm::Reloc::PIC_,
 	std::optional<llvm::CodeModel::Model>(),
-	llvm::CodeGenOpt::Less));
+	llvm::CodeGenOptLevel::Less));
 
     if (!tgtMachine) {
 	std::cerr << "**** Fatal error: unable to create target machine\n";
@@ -186,7 +187,9 @@ void mc_gen::dumpCode (llvm::Module *module, std::string const & stem, bool asmC
     }
 
     llvm::legacy::PassManager pass;
-    auto outKind = (asmCode ? llvm::CGFT_AssemblyFile : llvm::CGFT_ObjectFile);
+    auto outKind = (asmCode ?
+        llvm::CodeGenFileType::AssemblyFile :
+        llvm::CodeGenFileType::ObjectFile);
     if (this->_tgtMachine->addPassesToEmitFile(pass, outStrm, nullptr, outKind)) {
         llvm::errs() << "unable to add pass to generate '" << outFile << "'\n";
         return;
