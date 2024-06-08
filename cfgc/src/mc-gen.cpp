@@ -10,7 +10,8 @@
 
 #include "target-info.hpp"
 #include "mc-gen.hpp"
-#include "code-buffer.hpp"
+#include "context.hpp"
+#include "object-file.hpp"
 
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/IR/LegacyPassManager.h" /* needed for code gen */
@@ -32,7 +33,7 @@
 #include <iostream>
 
 
-mc_gen::mc_gen (llvm::LLVMContext &context, target_info const *info)
+MCGen::MCGen (TargetInfo const *info)
   : _tgtInfo(info), _tgtMachine(nullptr), _mam(), _fam(), _pb(nullptr)
 {
   // get the LLVM target triple
@@ -48,12 +49,9 @@ mc_gen::mc_gen (llvm::LLVMContext &context, target_info const *info)
         assert(false);
     }
 
-llvm::dbgs() << "host CPU = " << llvm::sys::getHostCPUName() << "\n";
-
     llvm::TargetOptions tgtOptions;
 
   // floating-point target options
-
     tgtOptions.setFP32DenormalMode (llvm::DenormalMode::getIEEE());
     tgtOptions.setFPDenormalMode (llvm::DenormalMode::getIEEE());
 
@@ -117,9 +115,9 @@ llvm::dbgs() << "host CPU = " << llvm::sys::getHostCPUName() << "\n";
 
     this->_pm.addPass (llvm::createModuleToFunctionPassAdaptor(std::move(fpm)));
 
-} // mc_gen constructor
+} // MCGen constructor
 
-mc_gen::~mc_gen ()
+MCGen::~MCGen ()
 {
     if (this->_pb != nullptr) {
         delete this->_pb;
@@ -127,58 +125,45 @@ mc_gen::~mc_gen ()
 
 }
 
-void mc_gen::beginModule (llvm::Module *module)
+void MCGen::beginModule (llvm::Module *module)
 {
   // tell the module about the target machine
     module->setTargetTriple(this->_tgtMachine->getTargetTriple().getTriple());
     module->setDataLayout(this->_tgtMachine->createDataLayout());
 
-} // mc_gen::beginModule
+} // MCGen::beginModule
 
-void mc_gen::endModule () { }
+void MCGen::endModule () { }
 
-void mc_gen::optimize (llvm::Module *module)
+void MCGen::optimize (llvm::Module *module)
 {
   // run the function optimizations over every function
     this->_pm.run (*module, this->_mam);
 
 }
 
-// adopted from SimpleCompiler::operator() (CompileUtils.cpp)
+// compile the code into the code buffer's object-file backing store.
 //
-std::unique_ptr<CodeObject> mc_gen::compile (llvm::Module *module)
+// adopted from SimpleCompiler::operator() (lib/ExecutionEngine/Orc/CompileUtils.cpp)
+//
+std::unique_ptr<ObjectFile> MCGen::emitMC (llvm::Module *module, ObjfileStream &objStrm)
 {
-    llvm::SmallVector<char, 0> objBufferSV;
-    {
-	llvm::raw_svector_ostream objStrm(objBufferSV);
-	llvm::legacy::PassManager pass;
-	llvm::MCContext *ctx; /* result parameter */
-	if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, objStrm)) {
-	    llvm::report_fatal_error ("unable to add pass to generate code", true);
-	}
-	pass.run (*module);
+    llvm::legacy::PassManager pass;
+    llvm::MCContext *ctx; /* result parameter */
+    if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, objStrm)) {
+        llvm::report_fatal_error ("unable to add pass to generate code", true);
     }
+    pass.run (*module);
 
-    auto objBuffer = std::make_unique<llvm::SmallVectorMemoryBuffer>(
-	std::move(objBufferSV), module->getModuleIdentifier() + "-objectbuffer");
-
-    return CodeObject::create (this->_tgtInfo, objBuffer->getMemBufferRef());
+    return std::make_unique<ObjectFile>(objStrm);
 
 }
 
-void mc_gen::dumpCode (llvm::Module *module, std::string const & stem, bool asmCode) const
+void MCGen::emitFile (
+    llvm::Module *module,
+    std::string const &outFile,
+    llvm::CodeGenFileType fileType)
 {
-    std::string outFile;
-    if (stem != "-") {
-        outFile = stem + (asmCode ? ".s" : ".o");
-    }
-    else if (! asmCode) {
-        outFile = "out.o";
-    }
-    else {
-        outFile = stem;
-    }
-
     std::error_code EC;
     llvm::raw_fd_ostream outStrm(outFile, EC, llvm::sys::fs::OF_None);
     if (EC) {
@@ -187,10 +172,7 @@ void mc_gen::dumpCode (llvm::Module *module, std::string const & stem, bool asmC
     }
 
     llvm::legacy::PassManager pass;
-    auto outKind = (asmCode ?
-        llvm::CodeGenFileType::AssemblyFile :
-        llvm::CodeGenFileType::ObjectFile);
-    if (this->_tgtMachine->addPassesToEmitFile(pass, outStrm, nullptr, outKind)) {
+    if (this->_tgtMachine->addPassesToEmitFile(pass, outStrm, nullptr, fileType)) {
         llvm::errs() << "unable to add pass to generate '" << outFile << "'\n";
         return;
     }

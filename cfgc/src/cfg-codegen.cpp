@@ -11,44 +11,43 @@
 
 #include "cfg.hpp"
 #include "target-info.hpp"
-//#include "codegen.hpp"
 
 namespace CFG {
 
   /***** code generation for the `ty` type *****/
 
-    Type *LABt::codegen (code_buffer * buf)
+    Type *LABt::codegen (Context * buf)
     {
 	return buf->mlValueTy;
 
     } // LABt::codegen
 
-    Type *PTRt::codegen (code_buffer * buf)
+    Type *PTRt::codegen (Context * buf)
     {
 	return buf->mlValueTy;
 
     } // PTRt::codegen
 
-    Type *TAGt::codegen (code_buffer * buf)
+    Type *TAGt::codegen (Context * buf)
     {
 	return buf->intTy;
 
     } // TAGt::codegen
 
-    Type *NUMt::codegen (code_buffer * buf)
+    Type *NUMt::codegen (Context * buf)
     {
 	return buf->iType (this->_v_sz);
 
     } // NUMt::codegen
 
-    Type *FLTt::codegen (code_buffer * buf)
+    Type *FLTt::codegen (Context * buf)
     {
 	return buf->fType (this->_v_sz);
 
     } // FLTt::codegen
 
   // code generation for a vector of types
-    static std::vector<Type *> genTypes (code_buffer * buf, std::vector<ty *> const &tys)
+    static std::vector<Type *> genTypes (Context * buf, std::vector<ty *> const &tys)
     {
 	std::vector<Type *> llvmTys;
 	llvmTys.reserve(tys.size());
@@ -60,7 +59,7 @@ namespace CFG {
 
   /***** code generation for the `exp` type *****/
 
-    Value *VAR::codegen (code_buffer * buf)
+    Value *VAR::codegen (Context * buf)
     {
 	Value *v = buf->lookupVal (this->_v_name);
 #ifdef _DEBUG
@@ -73,7 +72,7 @@ namespace CFG {
 
     } // VAR::codegen
 
-    Value *LABEL::codegen (code_buffer * buf)
+    Value *LABEL::codegen (Context * buf)
     {
 	cluster *cluster = buf->lookupCluster (this->_v_name);
 
@@ -83,7 +82,7 @@ namespace CFG {
 
     } // LABEL::codegen
 
-    Value *NUM::codegen (code_buffer * buf)
+    Value *NUM::codegen (Context * buf)
     {
 	if (this->get_iv().getSign() < 0) {
 	    return buf->iConst (this->get_sz(), this->get_iv().toInt64());
@@ -93,7 +92,7 @@ namespace CFG {
 
     } // NUM::codegen
 
-    Value *LOOKER::codegen (code_buffer * buf)
+    Value *LOOKER::codegen (Context * buf)
     {
 	Args_t args;
 	for (auto it = this->_v_args.begin(); it != this->_v_args.end(); ++it) {
@@ -103,7 +102,7 @@ namespace CFG {
 
     } // LOOKER::codegen
 
-    Value *PURE::codegen (code_buffer * buf)
+    Value *PURE::codegen (Context * buf)
     {
 	Args_t args;
 	for (auto it = this->_v_args.begin(); it != this->_v_args.end(); ++it) {
@@ -113,7 +112,7 @@ namespace CFG {
 
     } // PURE::codegen
 
-    Value *SELECT::codegen (code_buffer * buf)
+    Value *SELECT::codegen (Context * buf)
     {
 	Value *adr = buf->createGEP (
 	    buf->asPtr(this->_v_arg->codegen(buf)),
@@ -122,7 +121,7 @@ namespace CFG {
 
     } // SELECT::codegen
 
-    Value *OFFSET::codegen (code_buffer * buf)
+    Value *OFFSET::codegen (Context * buf)
     {
 	return buf->createGEP (
 	    buf->asPtr(this->_v_arg->codegen(buf)),
@@ -132,7 +131,7 @@ namespace CFG {
 
   /***** code generation for the `stm` type *****/
 
-    void LET::codegen (code_buffer * buf)
+    void LET::codegen (Context * buf)
     {
       // record mapping from the parameter to the compiled expression
 	this->_v1->bind (buf, this->_v0->codegen(buf));
@@ -141,7 +140,7 @@ namespace CFG {
 
     } // LET::codegen
 
-    void ALLOC::codegen (code_buffer * buf)
+    void ALLOC::codegen (Context * buf)
     {
 	Args_t args;
 	for (auto it = this->_v1.begin(); it != this->_v1.end(); ++it) {
@@ -156,7 +155,7 @@ namespace CFG {
 
   // helper function for argument set up for APPLY and THROW
     inline Args_t SetupStdArgs (
-	code_buffer * buf,
+	Context * buf,
 	llvm::FunctionType *fnTy,
 	frag_kind fk,
 	std::vector<exp *> const &cfgArgs)
@@ -177,7 +176,7 @@ namespace CFG {
 
     } // SetupStdArgs
 
-    void APPLY::codegen (code_buffer * buf)
+    void APPLY::codegen (Context * buf)
     {
 	frag_kind fk = frag_kind::STD_FUN;
 	llvm::FunctionType *fnTy;
@@ -205,7 +204,7 @@ namespace CFG {
 
     } // APPLY::codegen
 
-    void THROW::codegen (code_buffer * buf)
+    void THROW::codegen (Context * buf)
     {
 	llvm::FunctionType *fnTy;
 	Value *fn;
@@ -231,7 +230,7 @@ namespace CFG {
 
     } // THROW::codegen
 
-    void GOTO::codegen (code_buffer * buf)
+    void GOTO::codegen (Context * buf)
     {
 	llvm::BasicBlock *srcBB = buf->getCurBB();
 	frag *dstFrag = buf->lookupFrag (this->_v0);
@@ -265,7 +264,7 @@ namespace CFG {
 
     } // GOTO::codegen
 
-    void SWITCH::codegen (code_buffer * buf)
+    void SWITCH::codegen (Context * buf)
     {
       // evaluate the argument and truncate to 32 bits
 	Value *arg = buf->createTrunc(buf->asInt(this->_v0->codegen(buf)), buf->i32Ty);
@@ -302,7 +301,7 @@ namespace CFG {
 
     } // SWITCH::codegen
 
-    void BRANCH::codegen (code_buffer * buf)
+    void BRANCH::codegen (Context * buf)
     {
       // evaluate the test
 	Args_t args;
@@ -335,7 +334,7 @@ namespace CFG {
 
     } // BRANCH::codegen
 
-    void ARITH::codegen (code_buffer * buf)
+    void ARITH::codegen (Context * buf)
     {
 	Args_t args;
 	for (auto it = this->_v1.begin(); it != this->_v1.end(); ++it) {
@@ -348,7 +347,7 @@ namespace CFG {
 
     } // ARITH::codegen
 
-    void SETTER::codegen (code_buffer * buf)
+    void SETTER::codegen (Context * buf)
     {
 	Args_t args;
 	for (auto it = this->_v1.begin(); it != this->_v1.end(); ++it) {
@@ -360,7 +359,7 @@ namespace CFG {
 
     } // SETTER::codegen
 
-    void CALLGC::codegen (code_buffer * buf)
+    void CALLGC::codegen (Context * buf)
     {
       // evaluate the roots
 	Args_t roots = buf->createArgs (frag_kind::STD_FUN, this->_v0.size());
@@ -376,7 +375,7 @@ namespace CFG {
 
     } // CALLGC::codegen
 
-    void RCC::codegen (code_buffer * buf)
+    void RCC::codegen (Context * buf)
     {
 	assert (false && "RCC not yet implemented"); /* TODO */
     } // RCC::codegen
@@ -384,7 +383,7 @@ namespace CFG {
 
   /***** code generation for the `frag` type *****/
 
-    void frag::codegen (code_buffer * buf, cluster *cluster)
+    void frag::codegen (Context * buf, cluster *cluster)
     {
 	buf->beginFrag ();
 
@@ -404,7 +403,7 @@ namespace CFG {
 
   /***** code generation for the `cluster` type *****/
 
-    void cluster::codegen (code_buffer * buf, bool isFirst)
+    void cluster::codegen (Context * buf, bool isFirst)
     {
 	buf->beginCluster (this, this->_fn);
 
@@ -426,7 +425,7 @@ namespace CFG {
 
   /***** code generation for the `comp_unit` type *****/
 
-    void comp_unit::codegen (code_buffer * buf)
+    void comp_unit::codegen (Context * buf)
     {
       // initialize the buffer for the comp_unit
 	buf->beginModule (this->_v_srcFile, this->_v_fns.size() + 1);

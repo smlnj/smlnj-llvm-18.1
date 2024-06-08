@@ -15,7 +15,7 @@
 namespace CFG_Prim {
 
   // helper function to get LLVM type for numbers
-    inline Type *numType (code_buffer * buf, numkind k, int sz)
+    inline Type *numType (Context * buf, numkind k, int sz)
     {
 	return (k == numkind::INT ? buf->iType(sz) : buf->fType(sz));
     }
@@ -26,7 +26,7 @@ namespace CFG_Prim {
   // helper function to ensure that arguments to arithmetic operations
   // have an LLVM integer type, since we use i64* (or i32*) as the type
   // of ML values
-    inline Value *castArgToInt (code_buffer * buf, unsigned sz, Value *arg)
+    inline Value *castArgToInt (Context * buf, unsigned sz, Value *arg)
     {
 	if (arg->getType() == buf->mlValueTy) {
 	    return buf->build().CreatePtrToInt(arg, buf->iType(sz));
@@ -36,7 +36,7 @@ namespace CFG_Prim {
     }
 
   /***** code generation for the `alloc` type *****/
-    Value *SPECIAL::codegen (code_buffer * buf, Args_t const &args)
+    Value *SPECIAL::codegen (Context * buf, Args_t const &args)
     {
       // the first argument is the record's descriptor word and the second
       // is the content of the special object.
@@ -45,13 +45,13 @@ namespace CFG_Prim {
 
     }
 
-    Value *RECORD::codegen (code_buffer * buf, Args_t const &args)
+    Value *RECORD::codegen (Context * buf, Args_t const &args)
     {
 	return buf->allocRecord (this->_v_desc.toUInt64(), args);
 
     } // RECORD::codegen
 
-    Value *RAW_RECORD::codegen (code_buffer * buf, Args_t const &args)
+    Value *RAW_RECORD::codegen (Context * buf, Args_t const &args)
     {
 	int len = args.size();
 	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
@@ -103,7 +103,7 @@ namespace CFG_Prim {
 
     } // RAW_RECORD::codegen
 
-    Value *RAW_ALLOC::codegen (code_buffer * buf, Args_t const &args)
+    Value *RAW_ALLOC::codegen (Context * buf, Args_t const &args)
     {
 	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
 	int len = this->_v_len;  // length in bytes
@@ -145,7 +145,7 @@ namespace CFG_Prim {
 
   /***** code generation for the `arith` type *****/
 
-    Value *ARITH::codegen (code_buffer * buf, Args_t const &argv)
+    Value *ARITH::codegen (Context * buf, Args_t const &argv)
     {
 	Value *pair;
 
@@ -196,7 +196,7 @@ namespace CFG_Prim {
 
     } // ARITH::codegen
 
-    Value *FLOAT_TO_INT::codegen (code_buffer * buf, Args_t const &args)
+    Value *FLOAT_TO_INT::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createFPToSI (args[0], buf->iType (this->_v_to));
 
@@ -205,7 +205,7 @@ namespace CFG_Prim {
 
   /***** code generation for the `pure` type *****/
 
-    Value *PURE_ARITH::codegen (code_buffer * buf, Args_t const &args)
+    Value *PURE_ARITH::codegen (Context * buf, Args_t const &args)
     {
 	unsigned sz = this->_v_sz;
 	switch (this->get_oper()) {
@@ -262,7 +262,7 @@ namespace CFG_Prim {
 
     } // PURE_ARITH::codegen
 
-    Value *EXTEND::codegen (code_buffer * buf, Args_t const &args)
+    Value *EXTEND::codegen (Context * buf, Args_t const &args)
     {
         // the current handling of smaller integer types in the SML/NJ backend is
         // kind of broken, since small-integers are usually represented as tagged
@@ -283,38 +283,38 @@ namespace CFG_Prim {
 
     } // EXTEND::codegen
 
-    Value *TRUNC::codegen (code_buffer * buf, Args_t const &args)
+    Value *TRUNC::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createTrunc (args[0], buf->iType(this->_v_to));
 
     } // TRUNC::codegen
 
-    Value *INT_TO_FLOAT::codegen (code_buffer * buf, Args_t const &args)
+    Value *INT_TO_FLOAT::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createSIToFP (args[0], buf->fType(this->_v_to));
 
     } // INT_TO_FLOAT::codegen
 
-    Value *FLOAT_TO_BITS::codegen (code_buffer * buf, Args_t const &args)
+    Value *FLOAT_TO_BITS::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createBitCast (args[0], buf->iType(this->_v_sz));
 
     } // FLOAT_TO_BITS::codegen
 
-    Value *BITS_TO_FLOAT::codegen (code_buffer * buf, Args_t const &args)
+    Value *BITS_TO_FLOAT::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createBitCast (args[0], buf->fType(this->_v_sz));
 
     } // BITS_TO_FLOAT::codegen
 
-    Value *PURE_SUBSCRIPT::codegen (code_buffer * buf, Args_t const &args)
+    Value *PURE_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
     {
 	Value *adr = buf->createGEP (buf->asPtr(args[0]), buf->asInt(args[1]));
 	return buf->build().CreateLoad (buf->mlValueTy, adr);
 
     } // PURE_SUBSCRIPT::codegen
 
-    Value *PURE_RAW_SUBSCRIPT::codegen (code_buffer * buf, Args_t const &args)
+    Value *PURE_RAW_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -324,7 +324,7 @@ namespace CFG_Prim {
 
     } // PURE_RAW_SUBSCRIPT::codegen
 
-    Value *RAW_SELECT::codegen (code_buffer * buf, Args_t const &args)
+    Value *RAW_SELECT::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -341,13 +341,13 @@ namespace CFG_Prim {
 
   /***** code generation for the `looker` type *****/
 
-    Value *DEREF::codegen (code_buffer * buf, Args_t const &args)
+    Value *DEREF::codegen (Context * buf, Args_t const &args)
     {
 	return buf->build().CreateLoad (buf->mlValueTy, buf->asPtr(args[0]));
 
     } // DEREF::codegen
 
-    Value *SUBSCRIPT::codegen (code_buffer * buf, Args_t const &args)
+    Value *SUBSCRIPT::codegen (Context * buf, Args_t const &args)
     {
 	Value *baseAdr = buf->asPtr(args[0]);
 	Value *adr = buf->createGEP(baseAdr, buf->asInt(args[1]));
@@ -356,7 +356,7 @@ namespace CFG_Prim {
 
     } // SUBSCRIPT::codegen
 
-    Value *RAW_LOAD::codegen (code_buffer * buf, Args_t const &args)
+    Value *RAW_LOAD::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -368,7 +368,7 @@ namespace CFG_Prim {
 
     } // RAW_LOAD::codegen
 
-    Value *RAW_SUBSCRIPT::codegen (code_buffer * buf, Args_t const &args)
+    Value *RAW_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -379,13 +379,13 @@ namespace CFG_Prim {
 
     } // RAW_SUBSCRIPT::codegen
 
-    Value *GET_HDLR::codegen (code_buffer * buf, Args_t const &args)
+    Value *GET_HDLR::codegen (Context * buf, Args_t const &args)
     {
 	return buf->mlReg (sml_reg_id::EXN_HNDLR);
 
     } // GET_HDLR::codegen
 
-    Value *GET_VAR::codegen (code_buffer * buf, Args_t const &args)
+    Value *GET_VAR::codegen (Context * buf, Args_t const &args)
     {
 	return buf->mlReg (sml_reg_id::VAR_PTR);
 
@@ -395,7 +395,7 @@ namespace CFG_Prim {
   /***** code generation for the `setter` type *****/
 
   // utility function to generate a store-list update
-    inline void recordStore (code_buffer *buf, Value *adr)
+    inline void recordStore (Context *buf, Value *adr)
     {
 	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
 	Value *storePtr = buf->mlReg (sml_reg_id::STORE_PTR);
@@ -411,13 +411,13 @@ namespace CFG_Prim {
 
     }
 
-    void UNBOXED_UPDATE::codegen (code_buffer * buf, Args_t const &args)
+    void UNBOXED_UPDATE::codegen (Context * buf, Args_t const &args)
     {
 	buf->createStoreML (args[2], buf->createGEP (buf->mlValueTy, args[0], args[1]));
 
     } // UNBOXED_UPDATE::codegen
 
-    void UPDATE::codegen (code_buffer * buf, Args_t const &args)
+    void UPDATE::codegen (Context * buf, Args_t const &args)
     {
 	Value *adr = buf->createGEP (buf->mlValueTy, args[0], args[1]);
 
@@ -427,7 +427,7 @@ namespace CFG_Prim {
 
     } // UPDATE::codegen
 
-    void UNBOXED_ASSIGN::codegen (code_buffer * buf, Args_t const &args)
+    void UNBOXED_ASSIGN::codegen (Context * buf, Args_t const &args)
     {
 	buf->createStore (
 	    buf->asInt(args[1]),
@@ -436,7 +436,7 @@ namespace CFG_Prim {
 
     } // UNBOXED_ASSIGN::codegen
 
-    void ASSIGN::codegen (code_buffer * buf, Args_t const &args)
+    void ASSIGN::codegen (Context * buf, Args_t const &args)
     {
 	recordStore (buf, args[0]);
 
@@ -444,7 +444,7 @@ namespace CFG_Prim {
 
     } // ASSIGN::codegen
 
-    void RAW_UPDATE::codegen (code_buffer * buf, Args_t const &args)
+    void RAW_UPDATE::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -460,7 +460,7 @@ namespace CFG_Prim {
 
     } // RAW_UPDATE::codegen
 
-    void RAW_STORE::codegen (code_buffer * buf, Args_t const &args)
+    void RAW_STORE::codegen (Context * buf, Args_t const &args)
     {
 	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
 
@@ -472,13 +472,13 @@ namespace CFG_Prim {
 
     } // RAW_STORE::codegen
 
-    void SET_HDLR::codegen (code_buffer * buf, Args_t const &args)
+    void SET_HDLR::codegen (Context * buf, Args_t const &args)
     {
 	buf->setMLReg (sml_reg_id::EXN_HNDLR, args[0]);
 
     } // SETHDLR::codegen
 
-    void SET_VAR::codegen (code_buffer * buf, Args_t const &args)
+    void SET_VAR::codegen (Context * buf, Args_t const &args)
     {
 	buf->setMLReg (sml_reg_id::VAR_PTR, args[0]);
 
@@ -502,7 +502,7 @@ namespace CFG_Prim {
 	    llvm::ICmpInst::ICMP_NE	// (unsigned) NEQ
 	};
 
-    Value *CMP::codegen (code_buffer * buf, Args_t const &args)
+    Value *CMP::codegen (Context * buf, Args_t const &args)
     {
 	int idx = 2 * (static_cast<int>(this->_v_oper) - 1);
 	if (! this->_v_signed) {
@@ -533,13 +533,13 @@ namespace CFG_Prim {
 	    llvm::FCmpInst::FCMP_UEQ	// F_UE
 	};
 
-    Value *FCMP::codegen (code_buffer * buf, Args_t const &args)
+    Value *FCMP::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createFCmp (FCmpMap[static_cast<int>(this->_v_oper) - 1], args[0], args[1]);
 
     } // FCMP::codegen
 
-    Value *FSGN::codegen (code_buffer * buf, Args_t const &args)
+    Value *FSGN::codegen (Context * buf, Args_t const &args)
     {
       // bitcast to integer type of same size
 	Value *asInt = buf->createBitCast (args[0], buf->iType (this->_v0));
@@ -548,19 +548,19 @@ namespace CFG_Prim {
 
     } // FSGN::codegen
 
-    Value *PEQL::codegen (code_buffer * buf, Args_t const &args)
+    Value *PEQL::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createICmpEQ(args[0], args[1]);
 
     } // PEQL::codegen
 
-    Value *PNEQ::codegen (code_buffer * buf, Args_t const &args)
+    Value *PNEQ::codegen (Context * buf, Args_t const &args)
     {
 	return buf->createICmpNE(args[0], args[1]);
 
     } // PNEQ::codegen
 
-    Value *LIMIT::codegen (code_buffer * buf, Args_t const &args)
+    Value *LIMIT::codegen (Context * buf, Args_t const &args)
     {
 	unsigned int amt = this->_v0;
 	unsigned int allocSlop = buf->targetInfo()->allocSlopSzb;

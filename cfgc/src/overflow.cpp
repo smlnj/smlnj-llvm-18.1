@@ -3,14 +3,14 @@
 /// \copyright 2023 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
-/// \brief This file contains the CodeBuffer methods that support
+/// \brief This file contains the Context methods that support
 /// signaling an Overflow exception.  We factor them out of the
-/// code-buffer.cpp file because they are fairly complicated.
+/// context.cpp file because they are fairly complicated.
 ///
 /// \author John Reppy
 ///
 
-#include "code-buffer.hpp"
+#include "context.hpp"
 #include "target-info.hpp"
 #include "cfg.hpp" // for argument setup
 
@@ -22,7 +22,7 @@
 // return the basic-block that contains the Overflow trap generator
 // We also update the PHI nodes for the overflow basic block.
 //
-llvm::BasicBlock *code_buffer::getOverflowBB ()
+llvm::BasicBlock *Context::getOverflowBB ()
 {
     auto srcBB = this->_builder.GetInsertBlock ();
     int nArgs = this->_regInfo.numMachineRegs();
@@ -71,13 +71,13 @@ llvm::BasicBlock *code_buffer::getOverflowBB ()
 
     return this->_overflowBB;
 
-} // code_buffer::getOverflowBB
+} // Context::getOverflowBB
 
 // get the branch-weight meta data for overflow branches
 //
-llvm::MDNode *code_buffer::overflowWeights ()
+llvm::MDNode *Context::overflowWeights ()
 {
   // we use 1/1000 as the probability of an overflow
     return this->branchProb(1);
 
-} // code_buffer::overflowWeights
+} // Context::overflowWeights

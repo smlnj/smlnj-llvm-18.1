@@ -18,7 +18,7 @@
 
 #include "sml-registers.hpp"
 
-struct target_info {
+struct TargetInfo {
     std::string name;			// the target's name; this should agree with LLVM's
 					// naming conventions (see lib/Support/Triple.cpp).
     std::string dataLayout;		// LLVM data layout string
@@ -47,7 +47,7 @@ struct target_info {
     init_fn_t initAsmParser;
     init_fn_t initAsmPrinter;
 
-    static target_info const *infoForTarget (std::string const &name);
+    static TargetInfo const *infoForTarget (std::string const &name);
 
     void initialize () const
     {
@@ -61,13 +61,14 @@ struct target_info {
         }
     }
 
-  // GC roots are std-link, std-clos, std-cont, callee saves, std-arg
+    /// return the number of GC roots, which are std-link, std-clos,
+    /// std-cont, the callee saves, and std-arg
     int numGCRoots () const { return this->numCalleeSaves + 4; }
 
     llvm::Triple getTriple() const;
 
-  /// given a number of bytes, round it up to the next multiple of the
-  /// target's word size
+    /// given a number of bytes, round it up to the next multiple of the
+    /// target's word size
     uint64_t roundToWordSz (uint64_t nBytes) const
     {
 	uint64_t mask = this->wordSzB - 1;

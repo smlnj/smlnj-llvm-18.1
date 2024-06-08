@@ -28,8 +28,9 @@ LLVM_CONFIG =	$(LLVM_DIR)/bin/llvm-config
 
 LLVM_TARGETS = $(shell $(LLVM_CONFIG) --targets-built)
 LLVM_CPP_FLAGS := $(shell $(LLVM_CONFIG) --cppflags)
+LLVM_CXX_FLAGS := $(shell $(LLVM_CONFIG) --cxxflags)
 LLVM_LD_FLAGS := $(shell $(LLVM_CONFIG) --ldflags)
-LLVM_LIBS :=	$(shell $(LLVM_CONFIG) --libs $(LLVM_TARGETS) passes) \
+LLVM_LIBS :=	$(shell $(LLVM_CONFIG) --libs $(LLVM_TARGETS) engine passes) \
 		$(shell $(LLVM_CONFIG) --system-libs)
 LLVM_BUILD_MODE := $(shell $(LLVM_CONFIG) --build-mode)
 
@@ -51,7 +52,7 @@ ifneq (,$(findstring X86,$(LLVM_TARGETS)))
 TARGET_FLAGS +=	-DENABLE_X86
 endif
 
-CXX =		clang++ --std=c++17
+CXX =		clang++
 CPP_FLAGS =	-I../include -I$(LLVM_DIR)/include/
 CXX_FLAGS =	-g $(LLVM_CXX_FLAGS)
 LD_FLAGS =	$(LLVM_LD_FLAGS)
@@ -61,7 +62,7 @@ SRCS =		$(wildcard *.cpp)
 OBJS =		$(SRCS:%.cpp=%.o)
 
 $(TARGET):	$(OBJS)
-	clang++ -o $(TARGET) $(LD_FLAGS) $(OBJS) $(LLVM_LIBS)
+	$(CXX) -o $(TARGET) $(LD_FLAGS) $(OBJS) $(LLVM_LIBS)
 
 %.o: %.cpp $(INCLUDES)
 	$(CXX) -c -DHOST_ARCH="\"$(HOST_ARCH)\"" $(CPP_FLAGS) $(CXX_FLAGS) $(TARGET_FLAGS) $<

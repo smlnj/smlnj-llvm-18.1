@@ -1,6 +1,6 @@
 /// \file codegen.hpp
 ///
-/// \copyright 2023 The Fellowship of SML/NJ (https://smlnj.org)
+/// \copyright 2024 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
 /// \brief Interface to the code generator library (for testing purposes).
@@ -13,7 +13,14 @@
 
 #include <string>
 
-enum class output { PrintAsm, AsmFile, ObjFile, Memory, LLVMAsmFile };
+enum class output {
+    PrintAsm,           ///< print native assembly to stdout
+    AsmFile,            ///< generate native assembly in a ".s" file
+    ObjFile,            ///< generate an object (".o") file
+    Memory,             ///< simulates the "in-memory" code generation used in the
+                        ///  SML/NJ runtime, including patching relocation information
+    LLVMAsmFile         ///> generate LLVM assembly in a ".ll" file
+};
 
 // set the target architecture.  This call returns `true` when there
 // is an error and `false` otherwise.

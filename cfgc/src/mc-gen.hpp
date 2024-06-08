@@ -11,18 +11,18 @@
 #ifndef _MC_GEN_HPP_
 #define _MC_GEN_HPP_
 
-#include "code-object.hpp"
+#include "objfile-stream.hpp"
 
 #include "llvm/IR/Module.h"
-#include "llvm/IR/LLVMContext.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/IR/LegacyPassManager.h" /* needed for code gen */
 
-class mc_gen {
+class MCGen {
   public:
 
-    mc_gen (llvm::LLVMContext &context, target_info const *target);
-    ~mc_gen ();
+    MCGen (TargetInfo const *target);
+    ~MCGen ();
 
     /// per-module initialization
     void beginModule (llvm::Module *module);
@@ -33,14 +33,18 @@ class mc_gen {
     /// run the per-function optimizations over the functions of the module
     void optimize (llvm::Module *module);
 
-    /// dump the code to an output file
-    void dumpCode (llvm::Module *module, std::string const & stem, bool asmCode = true) const;
+    /// compile the module's code to an in-memory object file
+    std::unique_ptr<class ObjectFile> emitMC (llvm::Module *module, ObjfileStream &objStrm);
 
-    /// compile the code into the code buffer's object-file backing store.
-    std::unique_ptr<CodeObject> compile (llvm::Module *module);
+    /// dump the code for the module to an output file; the file type should be
+    /// either `AssemblyFile` or `ObjectFile`
+    void emitFile (
+        llvm::Module *module,
+        std::string const &outFile,
+        llvm::CodeGenFileType fileType);
 
   private:
-    target_info const *_tgtInfo;
+    TargetInfo const *_tgtInfo;
     std::unique_ptr<llvm::TargetMachine> _tgtMachine;
 
   // analysis and optimization managers

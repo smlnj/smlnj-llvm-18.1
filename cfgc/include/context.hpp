@@ -1,15 +1,16 @@
-/// \file code-buffer.hpp
+/// \file context.hpp
 ///
 /// \copyright 2023 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
-/// \brief The code_buffer class wraps up the LLVM code generator state.
+/// \brief The Context class is an extension of the `LLVMContext` class
+///        and wraps up the LLVM code generator state used to generate code.
 ///
 /// \author John Reppy
 ///
 
-#ifndef __CODE_BUFFER_HPP__
-#define __CODE_BUFFER_HPP__
+#ifndef _CONTEXT_HPP_
+#define _CONTEXT_HPP_
 
 #include <memory>
 #include <string>
@@ -50,6 +51,8 @@ namespace CFG {
     enum class frag_kind;
 }
 
+struct TargetInfo;
+
 // map from lvars to values of type T*
 template <typename T>
 using lvar_map_t = std::unordered_map<LambdaVar::lvar, T *>;
@@ -59,15 +62,16 @@ using lvar_map_t = std::unordered_map<LambdaVar::lvar, T *>;
 //
 using frag_kind = CFG::frag_kind;
 
-/// The code_buffer class encapsulates the current state of code generation, as well
+/// The Context class encapsulates the current state of code generation, as well
 /// as information about the target architecture.  It is passed as an argument to
 /// all of the `codegen` methods in the CFG representation.
 //
-class code_buffer : public llvm::LLVMContext {
+class Context : public llvm::LLVMContext {
   public:
 
   // create the code buffer for the given target
-    static code_buffer *create (std::string const & target);
+    static Context *create (const TargetInfo * target);
+    static Context *create (std::string const & target);
 
     void optimize ();
 
@@ -79,6 +83,10 @@ class code_buffer : public llvm::LLVMContext {
 
   // delete the module after code generation
     void endModule ();
+
+    //! return the current module
+    llvm::Module const *module () const { return this->_module; }
+    llvm::Module *module () { return this->_module; }
 
   // set the current cluster (during preperation for code generation)
     void setCluster (CFG::cluster *cluster) { this->_curCluster = cluster; }
@@ -164,7 +172,7 @@ class code_buffer : public llvm::LLVMContext {
     bool is64Bit () const { return (this->_wordSzB == 8); }
 
     /// return a ponter to the target information struct
-    target_info const *targetInfo () const { return this->_target; }
+    TargetInfo const *targetInfo () const { return this->_target; }
 
     /// align the allocation pointer for 64 bits on 32-bit machines.  The resulting
     /// alloc pointer points to the location of the object descriptor, so adding
@@ -639,7 +647,7 @@ class code_buffer : public llvm::LLVMContext {
 	return this->_builder.CreateAlignedLoad (ty, adr, llvm::MaybeAlign(0));
     }
 
-    /// create s store of a ML value
+    /// create a store of a ML value
     void createStoreML (Value *v, Value *adr)
     {
 	this->_builder.CreateAlignedStore (
@@ -753,9 +761,9 @@ class code_buffer : public llvm::LLVMContext {
     bool verify () const;
 
   private:
-    struct target_info const	*_target;
+    struct TargetInfo const	*_target;
     llvm::IRBuilder<>		_builder;
-    class mc_gen		*_gen;
+    class MCGen		*_gen;
     llvm::Module		*_module;	// current module
     llvm::Function		*_curFn;	// current LLVM function
     CFG::cluster		*_curCluster;	// current CFG cluster
@@ -763,7 +771,7 @@ class code_buffer : public llvm::LLVMContext {
     lvar_map_t<CFG::frag>	_fragMap;	// pre-cluster map from labels to fragments
     lvar_map_t<Value>		_vMap;		// per-fragment map from lvars to values
 
-    // more cached types (these are internal to the code_buffer class)
+    // more cached types (these are internal to the Context class)
     llvm::FunctionType *_gcFnTy; 		// type of call-gc function
     llvm::FunctionType *_raiseOverflowFnTy;	// type of raise_overflow function
 
@@ -842,8 +850,7 @@ class code_buffer : public llvm::LLVMContext {
     void _addExtraArgs (Args_t &args, arg_info const &info) const;
 
     /// private constructor
-    code_buffer (struct target_info const *target);
-
+    Context (struct TargetInfo const *target);
 };
 
-#endif // !__CODE_BUFFER_HPP__
+#endif // !_CONTEXT_HPP_

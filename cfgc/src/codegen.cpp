@@ -8,7 +8,7 @@
 /// \author John Reppy
 ///
 
-#include "code-buffer.hpp"
+#include "context.hpp"
 #include "cfg.hpp"
 #include "codegen.hpp"
 #include "target-info.hpp"
@@ -53,20 +53,20 @@ class Timer {
     Timer (uint64_t t) : _ns100(t) { }
 };
 
-static code_buffer *CodeBuf = nullptr;
+static Context *gContext = nullptr;
 
 bool setTarget (std::string const &target)
 {
-    if (CodeBuf != nullptr) {
-	if (CodeBuf->targetInfo()->name == target) {
+    if (gContext != nullptr) {
+	if (gContext->targetInfo()->name == target) {
 	    return false;
 	}
-	delete CodeBuf;
+	delete gContext;
     }
 
-    CodeBuf = code_buffer::create (target);
+    gContext = Context::create (target);
 
-    return (CodeBuf == nullptr);
+    return (gContext == nullptr);
 
 }
 
@@ -74,7 +74,7 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 {
     asdl::file_instream inS(src);
 
-    assert (CodeBuf != nullptr && "call setTarget before calling codegen");
+    assert (gContext != nullptr && "call setTarget before calling codegen");
 
     std::cout << "read pickle ..." << std::flush;
     Timer pklTimer = Timer::start();
@@ -83,27 +83,27 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 
     std::cout << " generate llvm ..." << std::flush;;
     Timer genTimer = Timer::start();
-    cu->codegen (CodeBuf);
+    cu->codegen (gContext);
     std::cout << " " << genTimer.msec() << "ms\n" << std::flush;
 
 //    if (emitLLVM) {
-//	CodeBuf->dump ();
+//	gContext->dump ();
 //    }
 
-    if (! CodeBuf->verify ()) {
+    if (! gContext->verify ()) {
 	std::cerr << "Module verified\n";
     }
 
     std::cout << " optimize ..." << std::flush;;
     Timer optTimer = Timer::start();
-    CodeBuf->optimize ();
+    gContext->optimize ();
     std::cout << " " << optTimer.msec() << "ms\n" << std::flush;
 
 //    if (emitLLVM) {
-//	CodeBuf->dump ();
+//	gContext->dump ();
 //    }
 
-    if (! CodeBuf->verify ()) {
+    if (! gContext->verify ()) {
 	std::cerr << "Module verified after optimization\n";
     }
 
@@ -119,25 +119,25 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 
     switch (out) {
       case output::PrintAsm:
-	CodeBuf->dumpAsm();
+	gContext->dumpAsm();
 	break;
       case output::AsmFile:
-	CodeBuf->dumpAsm (stem);
+	gContext->dumpAsm (stem);
 	break;
       case output::ObjFile:
-	CodeBuf->dumpObj (stem);
+	gContext->dumpObj (stem);
 	break;
       case output::Memory: {
-	    auto obj = CodeBuf->compile ();
+	    auto obj = gContext->compile ();
 	    if (obj) {
 		obj->dump(dumpBits);
 	    }
 	} break;
       case output::LLVMAsmFile:
-        CodeBuf->dumpLL(stem);
+        gContext->dumpLL(stem);
         break;
     }
 
-    CodeBuf->endModule();
+    gContext->endModule();
 
 }

@@ -44,7 +44,7 @@ void LLVMInitializeAArch64TargetMC ();
 void LLVMInitializeAArch64AsmParser ();
 void LLVMInitializeAArch64AsmPrinter ();
 }
-static target_info Arm64Info = {
+static TargetInfo Arm64Info = {
 	"aarch64",			// official LLVM triple name
 	"e-m:o-i64:64-i128:128-n32:64-S128", // LLVM data layout string
 	"sp",				// stack-pointer name
@@ -74,7 +74,7 @@ void LLVMInitializeX86TargetMC ();
 void LLVMInitializeX86AsmParser ();
 void LLVMInitializeX86AsmPrinter ();
 }
-static target_info X86_64Info = {
+static TargetInfo X86_64Info = {
 	"x86_64",			// official LLVM triple name
 	"e-i64:64-n8:16:32:64-S128",	// LLVM data layout string
 	"rsp",				// stack-pointer name
@@ -99,7 +99,7 @@ static target_info X86_64Info = {
     };
 #endif
 
-static target_info const *Targets[] = {
+static TargetInfo const *Targets[] = {
 #if defined(ENABLE_X86)
 	&X86_64Info,
 #endif
@@ -108,9 +108,9 @@ static target_info const *Targets[] = {
 #endif
     };
 
-constexpr int kNumTargets = sizeof(Targets) / sizeof(target_info *);
+constexpr int kNumTargets = sizeof(Targets) / sizeof(TargetInfo *);
 
-target_info const *target_info::infoForTarget (std::string const &name)
+TargetInfo const *TargetInfo::infoForTarget (std::string const &name)
 {
     for (int i = 0;  i < kNumTargets;  i++) {
 	if (Targets[i]->name == name) {
@@ -121,7 +121,7 @@ target_info const *target_info::infoForTarget (std::string const &name)
 
 }
 
-llvm::Triple target_info::getTriple() const
+llvm::Triple TargetInfo::getTriple() const
 {
     return llvm::Triple(this->name, kVendor, kOS);
 }

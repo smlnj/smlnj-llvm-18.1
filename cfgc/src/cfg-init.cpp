@@ -22,7 +22,7 @@ namespace CFG {
 
   // helper function for setting the `_bb` field of a `stm`
   //
-    inline void stm::_initBB (code_buffer * buf, bool blkEntry)
+    inline void stm::_initBB (Context * buf, bool blkEntry)
     {
 	if (blkEntry) {
 	    this->_bb = buf->newBB();
@@ -31,7 +31,7 @@ namespace CFG {
 	}
     }
 
-    void LET::init (code_buffer * buf, bool blkEntry)
+    void LET::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -40,7 +40,7 @@ namespace CFG {
 
     } // LET::init
 
-    void ALLOC::init (code_buffer * buf, bool blkEntry)
+    void ALLOC::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -49,25 +49,25 @@ namespace CFG {
 
     } // ALLOC::init
 
-    void APPLY::init (code_buffer * buf, bool blkEntry)
+    void APPLY::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
     } // APPLY::init
 
-    void THROW::init (code_buffer * buf, bool blkEntry)
+    void THROW::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
     } // THROW::init
 
-    void GOTO::init (code_buffer * buf, bool blkEntry)
+    void GOTO::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
     } // GOTO::init
 
-    void SWITCH::init (code_buffer * buf, bool blkEntry)
+    void SWITCH::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -78,7 +78,7 @@ namespace CFG {
 
     } // SWITCH::init
 
-    void BRANCH::init (code_buffer * buf, bool blkEntry)
+    void BRANCH::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -88,7 +88,7 @@ namespace CFG {
 
     } // BRANCH::init
 
-    void ARITH::init (code_buffer * buf, bool blkEntry)
+    void ARITH::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -97,7 +97,7 @@ namespace CFG {
 
     } // ARITH::init
 
-    void SETTER::init (code_buffer * buf, bool blkEntry)
+    void SETTER::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -106,7 +106,7 @@ namespace CFG {
 
     } // SETTER::init
 
-    void CALLGC::init (code_buffer * buf, bool blkEntry)
+    void CALLGC::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -115,7 +115,7 @@ namespace CFG {
 
     } // CALLGC::init
 
-    void RCC::init (code_buffer * buf, bool blkEntry)
+    void RCC::init (Context * buf, bool blkEntry)
     {
 	this->_initBB (buf, blkEntry);
 
@@ -132,7 +132,7 @@ namespace CFG {
     // entry block for the fragment) and we add phi nodes to the block for each
     // of the parameters.
     //
-    void frag::init (code_buffer * buf)
+    void frag::init (Context * buf)
     {
       // add the fragment to the label to fragment map
 	buf->insertFrag (this->_v_lab, this);
@@ -164,7 +164,7 @@ namespace CFG {
 
   /***** initialization for the `cluster` type *****/
 
-    void cluster::init (code_buffer * buf, bool isEntry)
+    void cluster::init (Context * buf, bool isEntry)
     {
 	assert (this->_v_frags.size() > 0);
 
