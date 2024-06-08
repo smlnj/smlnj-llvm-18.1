@@ -32,6 +32,12 @@ public:
 
     ~ObjectFile ();
 
+    /// return the size of the executable parts (code + data) of this object file
+    size_t size () const;
+
+    /// return a pointer to the executable parts (code + data) of this object file
+    uint8_t const *data () const;
+
 private:
     struct TargetInfo const *_target;
     class MemManager *_memManager;

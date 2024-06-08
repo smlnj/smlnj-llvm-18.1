@@ -8,6 +8,7 @@
 /// \author John Reppy
 ///
 
+#include "objfile-stream.hpp"
 #include "target-info.hpp"
 #include "mc-gen.hpp"
 #include "context.hpp"
@@ -146,8 +147,9 @@ void MCGen::optimize (llvm::Module *module)
 //
 // adopted from SimpleCompiler::operator() (lib/ExecutionEngine/Orc/CompileUtils.cpp)
 //
-std::unique_ptr<ObjectFile> MCGen::emitMC (llvm::Module *module, ObjfileStream &objStrm)
+std::unique_ptr<ObjectFile> MCGen::emitMC (llvm::Module *module)
 {
+    ObjfileStream objStrm;
     llvm::legacy::PassManager pass;
     llvm::MCContext *ctx; /* result parameter */
     if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, objStrm)) {

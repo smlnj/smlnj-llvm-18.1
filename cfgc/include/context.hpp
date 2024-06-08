@@ -30,7 +30,6 @@
 
 #include "lambda-var.hpp"
 #include "sml-registers.hpp"
-#include "code-object.hpp"
 
 using Value = llvm::Value;
 using Type = llvm::Type;
@@ -738,7 +737,7 @@ class Context : public llvm::LLVMContext {
   /***** Code generation *****/
 
     /// compile to an in-memory code object
-    std::unique_ptr<CodeObject> compile () const;
+    std::unique_ptr<class ObjectFile> compile () const;
 
     /// dump assembly code to stdout
     void dumpAsm () const;

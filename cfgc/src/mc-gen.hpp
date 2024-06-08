@@ -11,8 +11,6 @@
 #ifndef _MC_GEN_HPP_
 #define _MC_GEN_HPP_
 
-#include "objfile-stream.hpp"
-
 #include "llvm/IR/Module.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Passes/PassBuilder.h"
@@ -34,7 +32,7 @@ class MCGen {
     void optimize (llvm::Module *module);
 
     /// compile the module's code to an in-memory object file
-    std::unique_ptr<class ObjectFile> emitMC (llvm::Module *module, ObjfileStream &objStrm);
+    std::unique_ptr<class ObjectFile> emitMC (llvm::Module *module);
 
     /// dump the code for the module to an output file; the file type should be
     /// either `AssemblyFile` or `ObjectFile`

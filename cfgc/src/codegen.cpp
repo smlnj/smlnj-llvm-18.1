@@ -12,6 +12,7 @@
 #include "cfg.hpp"
 #include "codegen.hpp"
 #include "target-info.hpp"
+#include "object-file.hpp"
 #include <iostream>
 
 // Some global flags for controlling the code generator.
@@ -130,7 +131,18 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
       case output::Memory: {
 	    auto obj = gContext->compile ();
 	    if (obj) {
-		obj->dump(dumpBits);
+                size_t sz = obj->size();
+                llvm::dbgs()
+                    << "##### OBJECT FILE BITS: " << obj->size() << " bytes #####\n";
+                uint8_t const *bytes = obj->data();
+                for (size_t i = 0;  i < sz; i += 16) {
+                    size_t limit = std::min(i + 16, sz);
+                    llvm::dbgs () << "  " << llvm::format_hex_no_prefix(i, 4) << ": ";
+                    for (int j = i;  j < limit;  j++) {
+                        llvm::dbgs() << " " << llvm::format_hex_no_prefix(bytes[j], 2);
+                    }
+                    llvm::dbgs () << "\n";
+                }
 	    }
 	} break;
       case output::LLVMAsmFile:

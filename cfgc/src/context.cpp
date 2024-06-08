@@ -12,7 +12,7 @@
 #include "target-info.hpp"
 #include "mc-gen.hpp"
 #include "cfg.hpp" // for argument setup
-#include "code-object.hpp"
+#include "object-file.hpp"
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/GlobalValue.h"
@@ -631,9 +631,9 @@ llvm::Function *Context::_getIntrinsic (llvm::Intrinsic::ID id, Type *ty) const
 	this->_module, id, llvm::ArrayRef<Type *>(ty));
 }
 
-std::unique_ptr<CodeObject> Context::compile () const
+std::unique_ptr<ObjectFile> Context::compile () const
 {
-    return this->_gen->compile (this->_module);
+    return this->_gen->emitMC (this->_module);
 }
 
 void Context::dumpAsm () const

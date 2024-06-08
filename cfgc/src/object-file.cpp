@@ -70,6 +70,8 @@ public:
         llvm::StringRef name,
         bool readOnly) override;
 
+    void registerEHFrames (uint8_t *addr, uint64_t loadAddr, size_t numBytes) override;
+
     virtual bool finalizeMemory (std::string* ErrMsg = nullptr) override
     {
         // nothing to do here, since we are not going to execute the code
@@ -114,6 +116,7 @@ private:
 
             uint8_t *ptr = this->_data + alignBy(this->_szb, align);
             this->_szb = (ptr - this->_data) + alignBy(nb, align);
+llvm::dbgs() << "## alloc " << nb << " bytes at " << (void *)ptr << "\n";
             return ptr;
         }
     };
@@ -121,6 +124,7 @@ private:
     uint8_t *_base;             ///< pointer to memory
     _Section _code;             ///< code section
     _Section _roData;           ///< read-only data section
+    _Section _rwData;           ///< read-write data section
 
 }; // class MemManager
 
@@ -133,18 +137,21 @@ void MemManager::reserveAllocationSpace (
     llvm::Align rwDataAlign)
 {
 /*DEBUG*/
-std::cout << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
+llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
 << ", rwData = " << rwDataSzb << "\n";
 /*DEBUG*/
 
-    assert (rwDataSzb == 0 && "unexpected non-empty RW data");
+//    assert (rwDataSzb == 0 && "unexpected non-empty RW data");
     assert (this->_base == nullptr && "memory already allocated");
 
     // set the section sizes with padding for alignment.  Since we are going to
-    // concatenate the sections, we need to pad the code section by the greater
-    // of the two alignments
-    this->_code.setSize(codeSzb, (codeAlign >= roDataAlign) ? codeAlign : roDataAlign);
+    // concatenate the sections, we need to pad the code section by the greatest
+    // of the alignments
+    if (roDataAlign > codeAlign) { codeAlign = roDataAlign; }
+    if (rwDataAlign > codeAlign) { codeAlign = rwDataAlign; }
+    this->_code.setSize(codeSzb, codeAlign);
     this->_roData.setSize(roDataSzb, roDataAlign);
+    this->_rwData.setSize(rwDataSzb, rwDataAlign);
 
     /// allocate the memory for the in-memory sections
     this->_base = new uint8_t (this->size());
@@ -152,6 +159,7 @@ std::cout << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
     /// assign base adresses for the sections
     this->_code._data = this->_base;
     this->_roData._data = this->_base + this->_code._paddedSzb;
+    this->_rwData._data = this->_roData._data + this->_roData._paddedSzb;
 
 } // MemManager::reserveAllocationSpace
 
@@ -164,7 +172,8 @@ uint8_t *MemManager::allocateCodeSection (
     assert (this->_base != nullptr && "memory has not been reserved");
 
 /*DEBUG*/
-std::cout << "# allocate code: szb = " << szb << "\n";
+llvm::dbgs() << "# allocate code[" << name << "]: szb = " << szb
+<< "; align = " << align << "\n";
 /*DEBUG*/
 
     return this->_code.alloc(szb, align);
@@ -179,15 +188,28 @@ uint8_t *MemManager::allocateDataSection (
     bool readOnly)
 {
     assert (this->_base != nullptr && "memory has not been reserved");
-    assert (readOnly && "unexpected allocation of RW data");
+//    assert (readOnly && "unexpected allocation of RW data");
 
 /*DEBUG*/
-std::cout << "# allocate data: szb = " << szb << "\n";
+llvm::dbgs() << "# allocate data[" << name << "]: szb = " << szb
+<< "; align = " << align << "; ro = " << readOnly << "\n";
 /*DEBUG*/
 
-    return this->_roData.alloc(szb, align);
+    if (readOnly) {
+        return this->_roData.alloc(szb, align);
+    } else {
+        return this->_rwData.alloc(szb, align);
+    }
 
 } // MemManager::allocateDataSection
+
+void MemManager::registerEHFrames (uint8_t *addr, uint64_t loadAddr, size_t numBytes)
+{
+/*DEBUG*/
+llvm::dbgs() << "# register EH frames: addr = " << (void*)addr
+<< ", loadAddr = " << loadAddr << "; numBytes = " << numBytes << "\n";
+/*DEBUG*/
+} // MemManager::registerEHFrames
 
 
 /***** class SymbolResolver *****/
@@ -238,9 +260,33 @@ ObjectFile::ObjectFile (ObjfileStream const &output)
     SymbolResolver symbolResolver;
     llvm::RuntimeDyld loader(*this->_memManager, symbolResolver);
 
+/*DEBUG*/
+llvm::dbgs() << "# link object file\n";
+/*DEBUG*/
+
+    // Use the LLVM object loader to load the object.
+    std::unique_ptr<llvm::RuntimeDyld::LoadedObjectInfo> loadedObject =
+        loader.loadObject(*object);
+    loader.finalizeWithMemoryManagerLocking();
+    if (loader.hasError()) {
+        std::string errMsg =
+            std::string("RuntimeDyld failed: ") + loader.getErrorString().data();
+        llvm::report_fatal_error (llvm::StringRef(errMsg), false);
+     }
+
 }
 
 ObjectFile::~ObjectFile ()
 {
     delete this->_memManager;
+}
+
+size_t ObjectFile::size () const
+{
+    return this->_memManager->size();
+}
+
+uint8_t const *ObjectFile::data () const
+{
+    return this->_memManager->data();
 }
