@@ -19,7 +19,16 @@
 
 void usage ()
 {
-    std::cerr << "usage: cfgc [ -o | -S | -c | -L] [ --emit-llvm ] [ --bits ] [ --target <target> ] <pkl-file>\n";
+    std::cerr << "usage: cfgc [ -o | -S | -L | -c ] [ --emit-llvm ] [ --bits ] [ --target <target> ] <pkl-file>\n";
+    std::cerr << "options:\n";
+    std::cerr << "    -o                -- generate an object file\n";
+    std::cerr << "    -S                -- emit target assembly code to a file\n";
+    std::cerr << "    -L                -- emit optimized LLVM assembly to a file\n";
+    std::cerr << "    -c                -- use JIT compiler and loader to produce code object\n";
+    std::cerr << "    -emit-llvm        -- emit generated LLVM assembly to standard output\n";
+    std::cerr << "    -bits             -- output the code-object bits (implies \"-c\" flag)\n";
+    std::cerr << "    -target <target>  -- specify the target architecture (default "
+              << HOST_ARCH << ")\n";
     exit (1);
 }
 
@@ -50,6 +59,7 @@ int main (int argc, char **argv)
 		emitLLVM = true;
 	    } else if (flag == "--bits") {
 		dumpBits = true;
+		out = output::Memory;
 	    } else if (flag == "--target") {
 		i++;
 		if (i < argc) {
@@ -62,8 +72,7 @@ int main (int argc, char **argv)
 	    }
 	}
 	else if ((i < argc-1) || (src != "")) {
-	    std::cerr << "usage: codegen [ -o | -S | -c | -L ] [ --emit-llvm ] [ --bits ] <pkl-file>\n";
-	    exit (1);
+            usage();
 	}
 	else {
 	    src = argv[i];

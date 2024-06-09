@@ -196,6 +196,7 @@ llvm::Function *Context::newFunction (
 
   // assign attributes to the function
     fn->addFnAttr (llvm::Attribute::Naked);
+    fn->addFnAttr (llvm::Attribute::NoUnwind);
 
     return fn;
 

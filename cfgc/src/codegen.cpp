@@ -87,9 +87,9 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
     cu->codegen (gContext);
     std::cout << " " << genTimer.msec() << "ms\n" << std::flush;
 
-//    if (emitLLVM) {
-//	gContext->dump ();
-//    }
+    if (emitLLVM) {
+	gContext->dump ();
+    }
 
     if (! gContext->verify ()) {
 	std::cerr << "Module verified\n";
@@ -130,7 +130,7 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 	break;
       case output::Memory: {
 	    auto obj = gContext->compile ();
-	    if (obj) {
+	    if (obj && dumpBits) {
                 size_t sz = obj->size();
                 llvm::dbgs()
                     << "##### OBJECT FILE BITS: " << obj->size() << " bytes #####\n";
