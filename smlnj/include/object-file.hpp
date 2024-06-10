@@ -16,8 +16,6 @@
 #include <cstdint>
 #include "objfile-stream.hpp"
 
-struct TargetInfo;
-
 /******************** class ObjectFile ********************/
 
 class ObjectFile {
