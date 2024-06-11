@@ -40,10 +40,10 @@
 # project files
 bin
 build
-cfgc/src/cfgc
-cfgc/tests/*.s
-cfgc/tests/*.ll
-cfgc/tests/*.o
+smlnj/cfgc/
+smlnj/tests/*.s
+smlnj/tests/*.ll
+smlnj/tests/*.o
 /include
 /lib
 
