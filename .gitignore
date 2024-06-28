@@ -40,7 +40,6 @@
 # project files
 bin
 build
-smlnj/cfgc/
 smlnj/tests/*.s
 smlnj/tests/*.ll
 smlnj/tests/*.o
