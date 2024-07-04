@@ -14,28 +14,29 @@
 
 #include "llvm/TargetParser/Triple.h"
 
-#include <string>
+#include <string_view>
+#include <vector>
 
 #include "sml-registers.hpp"
 
 struct TargetInfo {
-    std::string name;			// the target's name; this should agree with LLVM's
-					// naming conventions (see lib/Support/Triple.cpp).
-    std::string dataLayout;		// LLVM data layout string
-    std::string spName;			// the assembly name of the stack pointer register
-    llvm::Triple::ArchType arch;	// target architecture
-    int wordSzB;			// size in bytes of ML word (should also be the
+    std::string_view name;              // the target's name; this should agree with LLVM's
+                                        // naming conventions (see lib/Support/Triple.cpp).
+    std::string_view dataLayout;        // LLVM data layout string
+    std::string_view spName;            // the assembly name of the stack pointer register
+    llvm::Triple::ArchType arch;        // target architecture
+    int wordSzB;                        // size in bytes of ML word (should also be the
                                         // same as the native pointer size)
-    int wordSz;				// size in bits of ML word (== 8*wordSzB)
-    int numRegs;			// the number of SML registers used by the target
-    int numCalleeSaves;			// the number of registers used for callee-save values
-    bool hasPCRel;			// true if the target supports PC-relative addressing.
-    int stkOffset[reg_info::NUM_REGS];	// byte offset from stack pointer to location where
-					// the value is stored.  Will be non-zero only
-					// for CMachine registers that stack allocated
-    int callGCOffset;			// stack offset of call-gc entry address
-    int raiseOvflwOffset;		// stack offset of raise_overflow entry address
-    unsigned int allocSlopSzb;		// byte size of allocation slop
+    int wordSz;                         // size in bits of ML word (== 8*wordSzB)
+    int numRegs;                        // the number of SML registers used by the target
+    int numCalleeSaves;                 // the number of registers used for callee-save values
+    bool hasPCRel;                      // true if the target supports PC-relative addressing.
+    int stkOffset[reg_info::NUM_REGS];  // byte offset from stack pointer to location where
+                                        // the value is stored.  Will be non-zero only
+                                        // for CMachine registers that stack allocated
+    int callGCOffset;                   // stack offset of call-gc entry address
+    int raiseOvflwOffset;               // stack offset of raise_overflow entry address
+    unsigned int allocSlopSzb;          // byte size of allocation slop
 
   // initialization functions
     using init_fn_t = void (*)();
@@ -47,7 +48,9 @@ struct TargetInfo {
     init_fn_t initAsmParser;
     init_fn_t initAsmPrinter;
 
-    static TargetInfo const *infoForTarget (std::string const &name);
+    static TargetInfo const *infoForTarget (std::string_view name);
+
+    static std::vector<std::string_view> targetNames ();
 
     void initialize () const
     {
@@ -61,6 +64,9 @@ struct TargetInfo {
         }
     }
 
+    /// the target info for the native (host) architecture
+    static TargetInfo const *native;
+
     /// return the number of GC roots, which are std-link, std-clos,
     /// std-cont, the callee saves, and std-arg
     int numGCRoots () const { return this->numCalleeSaves + 4; }
@@ -71,8 +77,8 @@ struct TargetInfo {
     /// target's word size
     uint64_t roundToWordSz (uint64_t nBytes) const
     {
-	uint64_t mask = this->wordSzB - 1;
-	return (nBytes + mask) & ~mask;
+        uint64_t mask = this->wordSzB - 1;
+        return (nBytes + mask) & ~mask;
     }
 };
 

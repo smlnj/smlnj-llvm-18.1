@@ -18,17 +18,17 @@
 #include <string>
 #include <vector>
 
-// the CMachine special "registers".  These are registers that need to be
-// threaded through the environment and through function calls as extra
-// parameters.  On some targets, some of these may be allocated in the stack.
+/// the CMachine special "registers".  These are registers that need to be
+/// threaded through the environment and through function calls as extra
+/// parameters.  On some targets, some of these may be allocated in the stack.
 //
 enum class sml_reg_id {
-	ALLOC_PTR = 0,		// allocation pointer
-	LIMIT_PTR,		// heap-limit pointer
-	STORE_PTR,		// points to list of store records
-	EXN_HNDLR,		// exception handler
-	VAR_PTR,		// var_ptr register
-	NUM_REGS		// the number of special registers
+    ALLOC_PTR = 0,      ///< allocation pointer
+    LIMIT_PTR,          ///< heap-limit pointer
+    STORE_PTR,          ///< points to list of store records
+    EXN_HNDLR,          ///< exception handler
+    VAR_PTR,            ///< var_ptr register
+    NUM_REGS            ///< the number of special registers
 };
 
 class reg_info {
@@ -39,11 +39,11 @@ class reg_info {
   // functions for creating registers
     static reg_info *createReg (sml_reg_id id, int idx)
     {
-	return new reg_info (id, idx, 0);
+        return new reg_info (id, idx, 0);
     }
     static reg_info *createStkReg (sml_reg_id id, int offset)
     {
-	return new reg_info (id, -1, offset);
+        return new reg_info (id, -1, offset);
     }
 
     sml_reg_id id () const { return this->_id; }
@@ -61,14 +61,14 @@ class reg_info {
     bool isMemReg () const { return (this->_idx < 0); }
 
   private:
-    sml_reg_id	_id;		// The ID of this register.
-    int		_idx;		// The index of hardware register assigned to this register.
-				// This value is the parameter index in the JWA calling
-				// convention.  It will be -1 for stack allocated registers
-    int		_offset;	// For stack allocated registers, this is the offset from
-				// the stack pointer to where the register is allocated in
-				// the frame
-    std::string _name;		// The register's name
+    sml_reg_id  _id;            // The ID of this register.
+    int         _idx;           // The index of hardware register assigned to this register.
+                                // This value is the parameter index in the JWA calling
+                                // convention.  It will be -1 for stack allocated registers
+    int         _offset;        // For stack allocated registers, this is the offset from
+                                // the stack pointer to where the register is allocated in
+                                // the frame
+    std::string _name;          // The register's name
 
     reg_info (sml_reg_id id, int idx, int off);
 
@@ -95,14 +95,14 @@ class sml_registers {
     reg_info const *machineReg (int idx) const { return this->_hwRegs[idx]; }
 
   private:
-    bool	_usesBasePtr;			// true if target needs the base register to
-						// compute code-address values
-    int		_nHWRegs;			// the number of special registers that are
-						// hardware supported.
-    reg_info *	_info[reg_info::NUM_REGS];	// information about the registers.
-    reg_info *	_hwRegs[reg_info::NUM_REGS];	// info about the SML registers that are
-						// mapped to machine registers and, thus, are
-						// passed as arguments in the JWA convention.
+    bool        _usesBasePtr;                   // true if target needs the base register to
+                                                // compute code-address values
+    int         _nHWRegs;                       // the number of special registers that are
+                                                // hardware supported.
+    reg_info *  _info[reg_info::NUM_REGS];      // information about the registers.
+    reg_info *  _hwRegs[reg_info::NUM_REGS];    // info about the SML registers that are
+                                                // mapped to machine registers and, thus, are
+                                                // passed as arguments in the JWA convention.
 };
 
 /// The reg_state tracks a mapping from CMachine registers to LLVM values.
@@ -117,14 +117,14 @@ class reg_state {
   // get the LLVM value that represents the specified CMachine register
     llvm::Value *get (sml_reg_id r) const
     {
-	return this->_val[static_cast<int>(r)];
+        return this->_val[static_cast<int>(r)];
     }
     llvm::Value *get (reg_info const *info) const { return this->get(info->id()); }
 
   // assign a value to a CMachine register
     void set (sml_reg_id r, llvm::Value *v)
     {
-	this->_val[static_cast<int>(r)] = v;
+        this->_val[static_cast<int>(r)] = v;
     }
 
   // get the LLVM value of the base-address pointer
@@ -133,8 +133,8 @@ class reg_state {
   // set the base-address pointer
     void setBasePtr (llvm::Value *v)
     {
-	assert (v->getType()->isIntegerTy() && "base pointer should have intTy");
-	this->_basePtr = v;
+        assert (v->getType()->isIntegerTy() && "base pointer should have intTy");
+        this->_basePtr = v;
     }
 
 #ifdef _DEBUG
@@ -144,10 +144,10 @@ class reg_state {
     void copyFrom (reg_state const & cache);
 
   private:
-    llvm::Value * _basePtr;			// base-address of current function; used for
-						// computing position-independent labels
-    llvm::Value * _val[reg_info::NUM_REGS];	// mapping from registers IDs to their current
-						// representation as an LLVM value.
+    llvm::Value * _basePtr;                     // base-address of current function; used for
+                                                // computing position-independent labels
+    llvm::Value * _val[reg_info::NUM_REGS];     // mapping from registers IDs to their current
+                                                // representation as an LLVM value.
 };
 
 /// initialize the static register information for the target

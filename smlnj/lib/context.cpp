@@ -21,6 +21,8 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_os_ostream.h"
 
+#include <string>
+
 /* control the adding of symbolic names to some values for easier debugging */
 #ifndef _DEBUG
 #  define NO_NAMES
@@ -40,7 +42,7 @@ Context *Context::create (const TargetInfo *tgtInfo)
     return buf;
 }
 
-Context *Context::create (std::string const & target)
+Context *Context::create (std::string_view target)
 {
     auto tgtInfo = TargetInfo::infoForTarget (target);
     if (tgtInfo == nullptr) {
@@ -114,7 +116,7 @@ Context::Context (TargetInfo const *target)
 
 } // constructor
 
-void Context::beginModule (std::string const & src, int nClusters)
+void Context::beginModule (std::string_view src, int nClusters)
 {
     this->_module = new llvm::Module (src, *this);
 
@@ -182,7 +184,7 @@ void Context::beginFrag ()
 
 llvm::Function *Context::newFunction (
     llvm::FunctionType *fnTy,
-    std::string const &name,
+    std::string_view name,
     bool isPublic)
 {
     llvm::Function *fn = llvm::Function::Create (
@@ -642,21 +644,24 @@ void Context::dumpAsm () const
     this->_gen->emitFile (this->_module, "-", llvm::CodeGenFileType::AssemblyFile);
 }
 
-void Context::dumpAsm (std::string const &stem) const
+void Context::dumpAsm (std::string_view stem) const
 {
-    this->_gen->emitFile (this->_module, stem + ".s", llvm::CodeGenFileType::AssemblyFile);
+    std::string outFile = std::string(stem) + ".s";
+    this->_gen->emitFile (this->_module, outFile, llvm::CodeGenFileType::AssemblyFile);
 }
 
-void Context::dumpObj (std::string const &stem) const
+void Context::dumpObj (std::string_view stem) const
 {
 // FIXME: on Windows, the extension should be ".obj"
-    this->_gen->emitFile (this->_module, stem + ".o", llvm::CodeGenFileType::ObjectFile);
+    std::string outFile = std::string(stem) + ".o";
+    this->_gen->emitFile (this->_module, outFile, llvm::CodeGenFileType::ObjectFile);
 }
 
-void Context::dumpLL (std::string const &stem) const
+void Context::dumpLL (std::string_view stem) const
 {
     std::error_code EC;
-    llvm::raw_fd_ostream outS(stem + ".ll", EC, llvm::sys::fs::OF_Text);
+    std::string outFile = std::string(stem) + ".ll";
+    llvm::raw_fd_ostream outS(outFile, EC, llvm::sys::fs::OF_Text);
     if (EC) {
 /* TODO */
     }

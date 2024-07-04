@@ -8,14 +8,16 @@
 /// \author John Reppy
 ///
 
+#include "smlnj/config.h"
+
 #include "target-info.hpp"
 
 #if defined(OPSYS_DARWIN)
-constexpr const char *kVendor = "apple";
-constexpr const char *kOS = "macosx";
+constexpr std::string_view kVendor = "apple";
+constexpr std::string_view kOS = "macosx";
 #elif defined(OPSYS_LINUX)
-constexpr const char *kVendor = "unknown";
-constexpr const char *kOS = "linuix";
+constexpr std::string_view kVendor = "unknown";
+constexpr std::string_view kOS = "linuix";
 #endif
 
 // make sure that the "ENABLE_xxx" symbol is defined for the host architecture */
@@ -108,9 +110,28 @@ static TargetInfo const *Targets[] = {
 #endif
     };
 
+// the target info for the native (host) architecture
+#if defined(ARCH_AMD64)
+const TargetInfo *TargetInfo::native = &X86_64Info;
+#elif defined(ARCH_ARM64)
+const TargetInfo *TargetInfo::native = &Arm64Info;
+#else
+#  error unknown native architecture
+#endif
+
 constexpr int kNumTargets = sizeof(Targets) / sizeof(TargetInfo *);
 
-TargetInfo const *TargetInfo::infoForTarget (std::string const &name)
+std::vector<std::string_view> TargetInfo::targetNames ()
+{
+    std::vector<std::string_view> targetNames;
+    targetNames.reserve(kNumTargets);
+    for (int i = 0;  i < kNumTargets;  i++) {
+        targetNames.push_back (Targets[i]->name);
+    }
+    return targetNames;
+}
+
+TargetInfo const *TargetInfo::infoForTarget (std::string_view name)
 {
     for (int i = 0;  i < kNumTargets;  i++) {
 	if (Targets[i]->name == name) {

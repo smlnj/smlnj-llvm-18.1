@@ -1,6 +1,6 @@
 /// \file asdl-stream.hpp
 ///
-/// \copyright 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+/// \copyright 2024 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
 /// \brief Defines the input and output stream types for ASDL picklers.
@@ -130,6 +130,7 @@ namespace asdl {
 	{
 	    if (this->_is->good())
 		return static_cast<unsigned char>(this->_is->get());
+/* LLVM uses the -fno-exceptions flag, so this code doesn't compile */
 #ifdef XXX
 	    throw std::ios_base::failure("decode error");
 #elif defined(NDEBUG)

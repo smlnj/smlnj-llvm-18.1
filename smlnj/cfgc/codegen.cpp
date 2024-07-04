@@ -19,6 +19,23 @@
 // These are just for testing purposes
 bool disableGC = false;
 
+static Context *gContext = nullptr;
+
+bool setTarget (std::string const &target)
+{
+    if (gContext != nullptr) {
+	if (gContext->targetInfo()->name == target) {
+	    return false;
+	}
+	delete gContext;
+    }
+
+    gContext = Context::create (target);
+
+    return (gContext == nullptr);
+
+}
+
 // timer support
 #include <time.h>
 
@@ -54,34 +71,18 @@ class Timer {
     Timer (uint64_t t) : _ns100(t) { }
 };
 
-static Context *gContext = nullptr;
-
-bool setTarget (std::string const &target)
-{
-    if (gContext != nullptr) {
-	if (gContext->targetInfo()->name == target) {
-	    return false;
-	}
-	delete gContext;
-    }
-
-    gContext = Context::create (target);
-
-    return (gContext == nullptr);
-
-}
-
 void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 {
-    asdl::file_instream inS(src);
-
     assert (gContext != nullptr && "call setTarget before calling codegen");
 
-    std::cout << "read pickle ..." << std::flush;
-    Timer pklTimer = Timer::start();
-    CFG::comp_unit *cu = CFG::comp_unit::read (inS);
-    std::cout << " " << pklTimer.msec() << "ms\n" << std::flush;
+    asdl::file_instream inS(src);
 
+    std::cout << "read pickle ..." << std::flush;
+    Timer unpklTimer = Timer::start();
+    CFG::comp_unit *cu = CFG::comp_unit::read (inS);
+    std::cout << " " << unpklTimer.msec() << "ms\n" << std::flush;
+
+    // generate LLVM
     std::cout << " generate llvm ..." << std::flush;;
     Timer genTimer = Timer::start();
     cu->codegen (gContext);
@@ -152,4 +153,4 @@ void codegen (std::string const & src, bool emitLLVM, bool dumpBits, output out)
 
     gContext->endModule();
 
-}
+} /* codegen */
