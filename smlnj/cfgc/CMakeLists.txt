@@ -18,6 +18,6 @@ target_compile_options(cfgc PRIVATE -fno-exceptions -fno-rtti)
 target_include_directories(cfgc PRIVATE
    ${CMAKE_BINARY_DIR}/smlnj/include
    ${CMAKE_BINARY_DIR}/llvm/include ${CMAKE_SOURCE_DIR}/llvm/include)
-target_link_libraries(cfgc ${LLVM_LIBS} CFGCodeGen)
+target_link_libraries(cfgc CFGCodeGen ${LLVM_LIBS})
 
 install(TARGETS cfgc)
