@@ -4,6 +4,8 @@
 # All rights reserved.
 #
 
+# LLVM 18.1 only requires 3.20, but we'll require a more recent version
+#
 cmake_minimum_required(VERSION 3.21.0)
 
 # Disable builds in the source tree to prevent corruption.

@@ -4,18 +4,19 @@
 # All rights reserved.
 #
 
-if (CMAKE_VERSION VERSION_LESS 3.25)
-  # workaround for older versions of CMake
-  #
-  if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(LINUX ON CACHE BOOL "Set to true when the target system is Linux" INTERNAL)
-  endif()
-endif()
-
 # When the project is not a sub-project, generate a placeholder
 # "smlnj/config.h" file
 #
 if(PROJECT_IS_TOP_LEVEL)
+
+  # workaround for older versions of CMake
+  #
+  if (CMAKE_VERSION VERSION_LESS 3.25)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      set(LINUX ON CACHE BOOL "Set to true when the target system is Linux" INTERNAL)
+    endif()
+  endif()
+
   # determine the operating system
   #
   if (APPLE)
