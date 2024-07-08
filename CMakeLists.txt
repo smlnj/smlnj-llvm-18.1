@@ -37,6 +37,8 @@ project(smlnj-llvm
 #
 option (SMLNJ_CFGC_BUILD
   "Enable building the cfgc command-line tool" OFF)
+option (SMLNJ_HEAP2OBJFILE_BUILD
+  "Enable building the heap2objfile command-line tool" OFF)
 
 ## Begin LLVM Configuration ##
 message(STATUS "** START LLVM CONFIGURATION **")
