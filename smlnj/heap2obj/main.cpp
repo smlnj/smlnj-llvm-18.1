@@ -3,7 +3,7 @@
 /// \copyright 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
 /// All rights reserved.
 ///
-/// \brief The heap2objfile tool converts a SML/NJ heap-image file to a host
+/// \brief The heap2obj tool converts a SML/NJ heap-image file to a host
 ///        object file that can be linked against the runtime system.
 ///
 /// \author John Reppy
@@ -25,6 +25,12 @@ namespace fs = std::filesystem;
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/IR/LegacyPassManager.h" /* needed for code gen */
+#include "llvm/MC/TargetRegistry.h"
+#include "llvm/Target/TargetMachine.h"
+
+constexpr std::string_view kTriple = SMLNJ_TARGET_TRIPLE;
 
 /// different output targets
 enum class Output {
@@ -47,10 +53,36 @@ inline uint64_t toSML (uint64_t n) { return n+n+1; }
     exit (1);
 }
 
+void emitFile (
+    llvm::Module &module,
+    llvm::TargetMachine *tgtMachine,
+    std::string const &outFile,
+    llvm::CodeGenFileType fileType)
+{
+    std::error_code ec;
+    llvm::raw_fd_ostream outStrm(outFile, ec, llvm::sys::fs::OF_None);
+    if (ec) {
+        std::cerr << "unable to open output file '" << outFile << "'\n";
+        return;
+    }
+
+    llvm::legacy::PassManager pass;
+    if (tgtMachine->addPassesToEmitFile(pass, outStrm, nullptr, fileType)) {
+        std::cerr << "unable to add pass to generate '" << outFile << "'\n";
+        return;
+    }
+
+    pass.run(module);
+
+    outStrm.flush();
+
+}
+
 int main (int argc, char const **argv)
 {
     Output out = Output::ObjFile;
-    std::string src = "";
+    std::string_view src = "";
+    std::string stem;
     std::string_view dst = "";
 
     // process command-line arguments
@@ -90,7 +122,7 @@ int main (int argc, char const **argv)
 
     // load the heap-image data
     std::error_code ec;
-    auto srcPath = fs::path(src);
+    fs::path srcPath = src;
     auto srcSts = fs::status(srcPath, ec);
     if (ec) {
         /* TODO: error */
@@ -100,10 +132,9 @@ int main (int argc, char const **argv)
         /* TODO: error */
     }
     uint64_t nBytes = (fileSzb + 7) & ~7; // round to 64-byte alignment
-    std::vector<uint8_t> heapData = std::vector<uint8_t>(nBytes, 0);
+    std::vector<char> heapData = std::vector<char>(nBytes, 0);
     {
-        std::basic_ifstream<uint8_t>
-            srcS(srcPath, std::ios_base::in | std::ios_base::binary);
+        std::ifstream srcS(srcPath, std::ios_base::in | std::ios_base::binary);
         srcS.read(heapData.data(), fileSzb);
         if (srcS.gcount() != fileSzb) {
             /* TODO: error */
@@ -114,6 +145,33 @@ int main (int argc, char const **argv)
     // create the LLVM context
     llvm::LLVMContext cxt;
 
+    // determine the target machine
+    llvm::Triple triple(kTriple);
+
+    // lookup the target in the registry using the triple's string representation
+    std::string errMsg;
+    auto *target = llvm::TargetRegistry::lookupTarget(triple.str(), errMsg);
+    if (target == nullptr) {
+	std::cerr << "**** Fatal error: unable to find target for \""
+	    << triple.str() << "\"\n";
+	std::cerr << "    [" << errMsg << "]\n";
+        ::exit(1);
+    }
+    llvm::TargetOptions tgtOptions;
+    llvm::TargetMachine *tgtMachine = target->createTargetMachine(
+	triple.str(),
+	"generic",		/* name of CPU variant */
+	"",			/* features string */
+	tgtOptions,
+	llvm::Reloc::PIC_,
+	std::optional<llvm::CodeModel::Model>(),
+	llvm::CodeGenOptLevel::Less);
+
+    if (tgtMachine == nullptr) {
+	std::cerr << "**** Fatal error: unable to create target machine\n";
+        assert(false);
+    }
+
     // get the integer types that we need
     auto i8Ty = llvm::IntegerType::get (cxt, 8);
     auto i64Ty = llvm::IntegerType::get (cxt, 64);
@@ -123,6 +181,10 @@ int main (int argc, char const **argv)
         });
 
     llvm::Module module(src, cxt);
+
+    // tell the module about the target machine
+    module.setTargetTriple(tgtMachine->getTargetTriple().getTriple());
+    module.setDataLayout(tgtMachine->createDataLayout());
 
     // create the constants
     llvm::Constant *mSize = llvm::ConstantInt::get(i64Ty, toSML(nBytes));
@@ -136,11 +198,34 @@ int main (int argc, char const **argv)
 
     auto heapV = new llvm::GlobalVariable (
         module,
+        heapTy,
         true,
         llvm::GlobalValue::ExternalLinkage,
         heapStruct,
         "_sml_heap_image");
 
     // output the object file
+    switch (out) {
+    case Output::AsmFile: {
+            std::string outFile = stem + ".s";
+            emitFile (module, tgtMachine, outFile, llvm::CodeGenFileType::AssemblyFile);
+        } break;
+    case Output::LLVMAsmFile: {
+            std::string outFile = std::string(stem) + ".ll";
+            llvm::raw_fd_ostream outS(outFile, ec, llvm::sys::fs::OF_Text);
+            if (ec) {
+                /* TODO: error */
+            }
+            module.print(outS, nullptr);
+            outS.close();
+        } break;
+    case Output::ObjFile: {
+// FIXME: on Windows, the extension should be ".obj"
+            std::string outFile = stem + ".o";
+            emitFile (module, tgtMachine, outFile, llvm::CodeGenFileType::ObjectFile);
+        } break;
+    } // switch
 
+    // cleanup
+    delete tgtMachine;
 }

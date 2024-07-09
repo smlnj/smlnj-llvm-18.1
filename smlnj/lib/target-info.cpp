@@ -15,9 +15,11 @@
 #if defined(OPSYS_DARWIN)
 constexpr std::string_view kVendor = "apple";
 constexpr std::string_view kOS = "macosx";
+#define DL_MANGLE "m:o" // MachO mangling
 #elif defined(OPSYS_LINUX)
 constexpr std::string_view kVendor = "unknown";
-constexpr std::string_view kOS = "linuix";
+constexpr std::string_view kOS = "linux";
+#define DL_MANGLE "m:e" // ELF mangling
 #endif
 
 // make sure that the "ENABLE_xxx" symbol is defined for the host architecture */
@@ -48,7 +50,7 @@ void LLVMInitializeAArch64AsmPrinter ();
 }
 static TargetInfo Arm64Info = {
 	"aarch64",			// official LLVM triple name
-	"e-m:o-i64:64-i128:128-n32:64-S128", // LLVM data layout string
+	"e-" DL_MANGLE "-i64:64-i128:128-n32:64-S128", // LLVM data layout string
 	"sp",				// stack-pointer name
 	llvm::Triple::aarch64,
 	8, 64,				// word size in bytes and bits
@@ -78,7 +80,7 @@ void LLVMInitializeX86AsmPrinter ();
 }
 static TargetInfo X86_64Info = {
 	"x86_64",			// official LLVM triple name
-	"e-i64:64-n8:16:32:64-S128",	// LLVM data layout string
+	"e-" DL_MANGLE "-i64:64-n8:16:32:64-S128", // LLVM data layout string
 	"rsp",				// stack-pointer name
 	llvm::Triple::x86_64,
 	8, 64,				// word size in bytes and bits

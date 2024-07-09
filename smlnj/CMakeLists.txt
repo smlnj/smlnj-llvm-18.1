@@ -73,8 +73,7 @@ if (SMLNJ_CFGC_BUILD)
   add_subdirectory(cfgc)
 endif()
 
-if (SMLNJ_HEAP2OBJFILE_BUILD)
-  message(STATUS "heap2objfile tool enabled.")
-  add_subdirectory(heap2objfile)
+if (SMLNJ_HEAP2OBJ_BUILD)
+  message(STATUS "heap2obj tool enabled.")
+  add_subdirectory(heap2obj)
 endif()
-

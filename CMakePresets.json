@@ -11,7 +11,7 @@
 	    "hidden" : true,
             "binaryDir" : "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_OSX_DEPLOYMENT_TARGET" : "10.14",
+                "CMAKE_OSX_DEPLOYMENT_TARGET" : "10.15",
                 "LLVM_ENABLE_BINDINGS" : "OFF",
 		"LLVM_ENABLE_LIBXML2" : "OFF",
 		"LLVM_ENABLE_OCAMLDOC" : "OFF",

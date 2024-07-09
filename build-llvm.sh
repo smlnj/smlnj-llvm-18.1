@@ -14,6 +14,7 @@
 #       -all-targets    -- build a version of LLVM that supports all hardware targets
 #                          that are known to SML/NJ
 #       -build-cfgc     -- build the cfgc (CFG compiler) tool
+#       -build-heap2obj -- build the heap2obj tool
 #       -debug          -- build a debug release of LLVM (WARNING: debug releases take
 #                          much longer to build and are signficantly slower than the
 #                          default release builds)
@@ -35,6 +36,7 @@ usage() {
   echo "    -all-targets    build a version of LLVM that supports all hardware targets"
   echo "                    that are known to SML/NJ"
   echo "    -build-cfgc     build the cfgc (CFG compiler) tool."
+  echo "    -build-heap2obj build the heap2objfile tool"
   echo "    -debug          build a debug version of the LLVM libraries"
   echo "    -docs           build LLVM API documentation"
   echo "    -config         configure, but do not compile"
@@ -107,6 +109,9 @@ while [ "$#" != "0" ] ; do
     -build-cfgc)
       BUILD_CFGC=yes
       ;;
+    -build-heap2obj)
+      BUILD_HEAP2OBJ=yes
+      ;;
     -debug)
       LLVM_BUILD_TYPE=Debug
       ;;
@@ -167,6 +172,10 @@ fi
 
 if [ x"$BUILD_CFGC" = xyes ] ; then
   CMAKE_DEFS="$CMAKE_DEFS -DSMLNJ_CFGC_BUILD=ON"
+fi
+
+if [ x"$BUILD_HEAP2OBJ" = xyes ] ; then
+  CMAKE_DEFS="$CMAKE_DEFS -DSMLNJ_HEAP2OBJ_BUILD=ON"
 fi
 
 # remove the build directory if it exists
