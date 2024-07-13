@@ -1,8 +1,8 @@
 {
-    "version" : 3,
+    "version" : 4,
     "cmakeMinimumRequired": {
       "major": 3,
-      "minor": 21,
+      "minor": 23,
       "patch": 0
     },
     "configurePresets": [
@@ -20,6 +20,7 @@
 		"LLVM_INCLUDE_DOCS" : "OFF",
                 "LLVM_INCLUDE_EXAMPLES" : "OFF",
 		"LLVM_INCLUDE_TESTS" : "OFF",
+                "LLVM_INCLUDE_UTILS" : "OFF",
 		"LLVM_TOOL_DSYMUTIL_BUILD" : "OFF",
 		"LLVM_TOOL_GOLD_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_AR_BUILD" : "OFF",
@@ -53,6 +54,7 @@
 		"LLVM_TOOL_LLVM_MC_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_MC_DISASSEMBLE_FUZZER_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_MICROSOFT_DEMANGLE_FUZZER_BUILD" : "OFF",
+                "LLVM_TOOL_LLVM_ML_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_MODEXTRACT_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_MT_BUILD" : "OFF",
 		"LLVM_TOOL_LLVM_NM_BUILD" : "OFF",
