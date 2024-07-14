@@ -23,6 +23,9 @@
 
 #include <string>
 
+namespace smlnj {
+namespace cfgcg {
+
 /* control the adding of symbolic names to some values for easier debugging */
 #ifndef _DEBUG
 #  define NO_NAMES
@@ -348,8 +351,8 @@ void Context::setupStdEntry (CFG::attrs *attrs, CFG::frag *frag)
     arg_info info = this->_getArgInfo(frag->get_kind());
 
   // initialize the register state
-    for (int i = 0, hwIx = 0;  i < reg_info::NUM_REGS;  ++i) {
-	reg_info const *info = this->_regInfo.info(static_cast<sml_reg_id>(i));
+    for (int i = 0, hwIx = 0;  i < CMRegInfo::NUM_REGS;  ++i) {
+	CMRegInfo const *info = this->_regInfo.info(static_cast<CMRegId>(i));
 	if (info->isMachineReg()) {
 	    llvm::Argument *arg = this->_curFn->getArg(hwIx++);
 #ifndef NO_NAMES
@@ -400,7 +403,7 @@ void Context::setupFragEntry (CFG::frag *frag, std::vector<llvm::PHINode *> &phi
 
   // initialize the register state
     for (int i = 0;  i < info.nExtra;  ++i) {
-	reg_info const *rInfo = this->_regInfo.machineReg(i);
+	CMRegInfo const *rInfo = this->_regInfo.machineReg(i);
 	this->_regState.set (rInfo->id(), phiNodes[i]);
     }
 
@@ -508,7 +511,7 @@ void Context::_initSPAccess ()
 }
 
 // private function for loading a special register from memory
-Value *Context::_loadMemReg (sml_reg_id r)
+Value *Context::_loadMemReg (CMRegId r)
 {
     auto info = this->_regInfo.info(r);
     return this->_loadFromStack (info->offset(), info->name());
@@ -516,7 +519,7 @@ Value *Context::_loadMemReg (sml_reg_id r)
 } // Context::_loadMemReg
 
 // private function for setting a special memory register
-void Context::_storeMemReg (sml_reg_id r, Value *v)
+void Context::_storeMemReg (CMRegId r, Value *v)
 {
     auto info = this->_regInfo.info(r);
     auto stkAddr = this->stkAddr (v->getType()->getPointerTo(), info->offset());
@@ -535,7 +538,7 @@ Value *Context::allocRecord (Value *desc, Args_t const & args)
     assert (desc->getType() == this->mlValueTy && "descriptor should be ML Value");
 
     int len = args.size();
-    Value *allocPtr = this->mlReg (sml_reg_id::ALLOC_PTR);
+    Value *allocPtr = this->mlReg (CMRegId::ALLOC_PTR);
 
   // write object descriptor
     this->build().CreateAlignedStore (desc, allocPtr, llvm::MaybeAlign (this->_wordSzB));
@@ -552,7 +555,7 @@ Value *Context::allocRecord (Value *desc, Args_t const & args)
     Value *obj = this->asMLValue (this->createGEP (allocPtr, 1));
 
   // bump the allocation pointer
-    this->setMLReg (sml_reg_id::ALLOC_PTR, this->createGEP (allocPtr, len + 1));
+    this->setMLReg (CMRegId::ALLOC_PTR, this->createGEP (allocPtr, len + 1));
 
     return obj;
 }
@@ -577,8 +580,8 @@ void Context::callGC (
     call->setTailCallKind (llvm::CallInst::TCK_NoTail);
 
   // restore the register state from the return struct
-    for (unsigned i = 0, hwIx = 0;  i < reg_info::NUM_REGS;  ++i) {
-	reg_info const *info = this->_regInfo.info(static_cast<sml_reg_id>(i));
+    for (unsigned i = 0, hwIx = 0;  i < CMRegInfo::NUM_REGS;  ++i) {
+	CMRegInfo const *info = this->_regInfo.info(static_cast<CMRegId>(i));
 	if (info->isMachineReg()) {
 	    auto reg = this->_builder.CreateExtractValue(call, { hwIx });
 	    this->setMLReg (info->id(), reg);
@@ -681,3 +684,6 @@ bool Context::verify () const
 {
     return llvm::verifyModule (*this->_module, &llvm::dbgs());
 }
+
+} // namespace cfgcg
+} // namespace smlnj

@@ -22,105 +22,105 @@ namespace CFG {
 
   // helper function for setting the `_bb` field of a `stm`
   //
-    inline void stm::_initBB (Context * buf, bool blkEntry)
+    inline void stm::_initBB (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
 	if (blkEntry) {
-	    this->_bb = buf->newBB();
+	    this->_bb = cxt->newBB();
 	} else {
 	    this->_bb = nullptr;
 	}
     }
 
-    void LET::init (Context * buf, bool blkEntry)
+    void LET::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v2->init (buf, false);
+	this->_v2->init (cxt, false);
 
     } // LET::init
 
-    void ALLOC::init (Context * buf, bool blkEntry)
+    void ALLOC::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v3->init (buf, false);
+	this->_v3->init (cxt, false);
 
     } // ALLOC::init
 
-    void APPLY::init (Context * buf, bool blkEntry)
+    void APPLY::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
     } // APPLY::init
 
-    void THROW::init (Context * buf, bool blkEntry)
+    void THROW::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
     } // THROW::init
 
-    void GOTO::init (Context * buf, bool blkEntry)
+    void GOTO::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
     } // GOTO::init
 
-    void SWITCH::init (Context * buf, bool blkEntry)
+    void SWITCH::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // initialize arms of switch
 	for (auto it = this->_v1.begin();  it != this->_v1.end();  ++it) {
-	    (*it)->init (buf, true);
+	    (*it)->init (cxt, true);
 	}
 
     } // SWITCH::init
 
-    void BRANCH::init (Context * buf, bool blkEntry)
+    void BRANCH::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // initialize arms of conditional
-	this->_v3->init (buf, true);
-	this->_v4->init (buf, true);
+	this->_v3->init (cxt, true);
+	this->_v4->init (cxt, true);
 
     } // BRANCH::init
 
-    void ARITH::init (Context * buf, bool blkEntry)
+    void ARITH::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v3->init (buf, false);
+	this->_v3->init (cxt, false);
 
     } // ARITH::init
 
-    void SETTER::init (Context * buf, bool blkEntry)
+    void SETTER::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v2->init (buf, false);
+	this->_v2->init (cxt, false);
 
     } // SETTER::init
 
-    void CALLGC::init (Context * buf, bool blkEntry)
+    void CALLGC::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v2->init (buf, false);
+	this->_v2->init (cxt, false);
 
     } // CALLGC::init
 
-    void RCC::init (Context * buf, bool blkEntry)
+    void RCC::init (smlnj::cfgcg::Context *cxt, bool blkEntry)
     {
-	this->_initBB (buf, blkEntry);
+	this->_initBB (cxt, blkEntry);
 
       // continue initialization
-	this->_v_k->init (buf, false);
+	this->_v_k->init (cxt, false);
 
     } // RCC::init
 
@@ -132,13 +132,13 @@ namespace CFG {
     // entry block for the fragment) and we add phi nodes to the block for each
     // of the parameters.
     //
-    void frag::init (Context * buf)
+    void frag::init (smlnj::cfgcg::Context *cxt)
     {
       // add the fragment to the label to fragment map
-	buf->insertFrag (this->_v_lab, this);
+	cxt->insertFrag (this->_v_lab, this);
 
       // initialize the fragment's body */
-	this->_v_body->init (buf, true);
+	this->_v_body->init (cxt, true);
 #ifndef NO_NAMES
 	this->_v_body->bb()->setName ("L_" + std::to_string(this->_v_lab));
 #endif
@@ -146,15 +146,15 @@ namespace CFG {
       // add a phi node for each parameter of the fragment
 	if (this->_v_kind == frag_kind::INTERNAL) {
 	  // compute the parameter types for the fragment
-	    auto paramTys = buf->createParamTys (this->_v_kind, this->_v_params.size());
+	    auto paramTys = cxt->createParamTys (this->_v_kind, this->_v_params.size());
 	    for (auto param : this->_v_params) {
-		paramTys.push_back (param->get_ty()->codegen (buf));
+		paramTys.push_back (param->get_ty()->codegen (cxt));
 	    }
 	  // for each parameter, add a PHI node to the entry block
-	    buf->setInsertPoint (this->_v_body->bb());
+	    cxt->setInsertPoint (this->_v_body->bb());
 	    this->_phiNodes.reserve (paramTys.size());
 	    for (auto ty : paramTys) {
-		llvm::PHINode *phi = buf->build().CreatePHI(ty, 0);
+		llvm::PHINode *phi = cxt->build().CreatePHI(ty, 0);
 		this->_phiNodes.push_back (phi);
 	    }
 	}
@@ -164,30 +164,30 @@ namespace CFG {
 
   /***** initialization for the `cluster` type *****/
 
-    void cluster::init (Context * buf, bool isEntry)
+    void cluster::init (smlnj::cfgcg::Context *cxt, bool isEntry)
     {
 	assert (this->_v_frags.size() > 0);
 
 	frag *entry = this->_v_frags[0];
 
       // add the cluster to the cluster map
-	buf->insertCluster (entry->get_lab(), this);
+	cxt->insertCluster (entry->get_lab(), this);
 
       // set the current cluster in the code buffer (needed to allow access to the
       // cluster's attributes)
-	buf->setCluster (this);
+	cxt->setCluster (this);
 
       // create and record the LLVM function for the cluster
 	auto params = entry->get_params();
 	std::vector<llvm::Type *> paramTys;
 	paramTys.reserve (params.size());
 	for (auto param : params) {
-	    paramTys.push_back (param->get_ty()->codegen(buf));
+	    paramTys.push_back (param->get_ty()->codegen(cxt));
 	}
-	llvm::FunctionType *fnTy = buf->createFnTy (entry->get_kind(), paramTys);
+	llvm::FunctionType *fnTy = cxt->createFnTy (entry->get_kind(), paramTys);
 
 	std::string name = (isEntry ? "entry" : "fn") + std::to_string(entry->get_lab());
-	this->_fn = buf->newFunction (fnTy, name, isEntry);
+	this->_fn = cxt->newFunction (fnTy, name, isEntry);
 
     }
 

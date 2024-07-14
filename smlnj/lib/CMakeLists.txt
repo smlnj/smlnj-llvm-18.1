@@ -17,7 +17,7 @@ set(SRCS
   object-file.cpp
   objfile-stream.cpp
   overflow.cpp
-  sml-registers.cpp
+  cm-registers.cpp
   target-info.cpp)
 
 add_library(CFGCodeGen STATIC ${SRCS})

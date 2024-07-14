@@ -16,6 +16,9 @@
 #include <cstdint>
 #include "objfile-stream.hpp"
 
+namespace smlnj {
+namespace cfgcg {
+
 /******************** class ObjectFile ********************/
 
 class ObjectFile {
@@ -41,5 +44,8 @@ private:
     class MemManager *_memManager;
 
 }; // ObjectFile
+
+} // namespace cfgcg
+} // namespace smlnj
 
 #endif //! _OBJECT_FILE_HPP_

@@ -17,31 +17,34 @@
 #include <string_view>
 #include <vector>
 
-#include "sml-registers.hpp"
+#include "cm-registers.hpp"
+
+namespace smlnj {
+namespace cfgcg {
 
 struct TargetInfo {
-    std::string_view name;              // the target's name; this should agree with LLVM's
-                                        // naming conventions (see lib/Support/Triple.cpp).
-    std::string_view dataLayout;        // LLVM data layout string
-    std::string_view spName;            // the assembly name of the stack pointer register
-    llvm::Triple::ArchType arch;        // target architecture
-    int wordSzB;                        // size in bytes of ML word (should also be the
-                                        // same as the native pointer size)
-    int wordSz;                         // size in bits of ML word (== 8*wordSzB)
-    int numRegs;                        // the number of SML registers used by the target
-    int numCalleeSaves;                 // the number of registers used for callee-save values
-    bool hasPCRel;                      // true if the target supports PC-relative addressing.
-    int stkOffset[reg_info::NUM_REGS];  // byte offset from stack pointer to location where
-                                        // the value is stored.  Will be non-zero only
-                                        // for CMachine registers that stack allocated
-    int callGCOffset;                   // stack offset of call-gc entry address
-    int raiseOvflwOffset;               // stack offset of raise_overflow entry address
-    unsigned int allocSlopSzb;          // byte size of allocation slop
+    std::string_view name;              ///< the target's name; this should agree with LLVM's
+                                        ///  naming conventions (see lib/Support/Triple.cpp).
+    std::string_view dataLayout;        ///< LLVM data layout string
+    std::string_view spName;            ///< the assembly name of the stack pointer register
+    llvm::Triple::ArchType arch;        ///< target architecture
+    int wordSzB;                        ///< size in bytes of ML word (should also be the
+                                        ///  same as the native pointer size)
+    int wordSz;                         ///< size in bits of ML word (== 8*wordSzB)
+    int numRegs;                        ///< the number of SML registers used by the target
+    int numCalleeSaves;                 ///< the number of registers used for callee-save values
+    bool hasPCRel;                      ///< true if the target supports PC-relative addressing.
+    int stkOffset[CMRegInfo::NUM_REGS]; ///< byte offset from stack pointer to location where
+                                        ///  the value is stored.  Will be non-zero only
+                                        ///  for CMachine registers that stack allocated
+    int callGCOffset;                   ///< stack offset of call-gc entry address
+    int raiseOvflwOffset;               ///< stack offset of raise_overflow entry address
+    unsigned int allocSlopSzb;          ///< byte size of allocation slop
 
-  // initialization functions
+    /// initialization functions
     using init_fn_t = void (*)();
 
-    mutable bool initialized;           // set to true after initialization
+    mutable bool initialized;           ///< set to true after initialization
     init_fn_t initTargetInfo;
     init_fn_t initTarget;
     init_fn_t initMC;
@@ -81,5 +84,8 @@ struct TargetInfo {
         return (nBytes + mask) & ~mask;
     }
 };
+
+} // namespace cfgcg
+} // namespace smlnj
 
 #endif // !_TARGET_INFO_HPP_

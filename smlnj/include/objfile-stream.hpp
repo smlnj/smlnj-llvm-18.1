@@ -16,6 +16,9 @@
 #include "llvm/ADT/StringRef.h"
 #include <vector>
 
+namespace smlnj {
+namespace cfgcg {
+
 /******************** class ObjfileStream ********************/
 
 class ObjfileStream : public llvm::raw_pwrite_stream {
@@ -53,5 +56,8 @@ private:
     uint64_t current_pos() const override;
 
 };
+
+} // namespace cfgcg
+} // namespace smlnj
 
 #endif // !_OBJFILE_STREAM_HPP_

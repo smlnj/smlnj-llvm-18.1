@@ -33,6 +33,8 @@
 
 #include <iostream>
 
+namespace smlnj {
+namespace cfgcg {
 
 MCGen::MCGen (TargetInfo const *info)
   : _tgtInfo(info), _tgtMachine(nullptr), _mam(), _fam(), _pb(nullptr)
@@ -184,3 +186,6 @@ void MCGen::emitFile (
     outStrm.flush();
 
 }
+
+} // namespace cfgcg
+} // namespace smlnj

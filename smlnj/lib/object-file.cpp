@@ -20,6 +20,8 @@
 
 #include <iostream>  // for debugging
 
+namespace smlnj {
+namespace cfgcg {
 
 inline uintptr_t alignBy (uintptr_t n, uintptr_t align)
 {
@@ -290,3 +292,6 @@ uint8_t const *ObjectFile::data () const
 {
     return this->_memManager->data();
 }
+
+} // namespace cfgcg
+} // namespace smlnj

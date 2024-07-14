@@ -11,6 +11,8 @@
 
 #include "objfile-stream.hpp"
 
+namespace smlnj {
+namespace cfgcg {
 
 /******************** class ObjfileStream ********************/
 
@@ -36,3 +38,6 @@ uint64_t ObjfileStream::current_pos() const
 {
     return this->_data.size();
 }
+
+} // namespace cfgcg
+} // namespace smlnj

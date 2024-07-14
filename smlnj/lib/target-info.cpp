@@ -12,6 +12,9 @@
 
 #include "target-info.hpp"
 
+namespace smlnj {
+namespace cfgcg {
+
 #if defined(OPSYS_DARWIN)
 constexpr std::string_view kVendor = "apple";
 constexpr std::string_view kOS = "macosx";
@@ -148,3 +151,6 @@ llvm::Triple TargetInfo::getTriple() const
 {
     return llvm::Triple(this->name, kVendor, kOS);
 }
+
+} // namespace cfgcg
+} // namespace smlnj

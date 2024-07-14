@@ -18,6 +18,8 @@
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/GlobalVariable.h"
 
+namespace smlnj {
+namespace cfgcg {
 
 // return the basic-block that contains the Overflow trap generator
 // We also update the PHI nodes for the overflow basic block.
@@ -65,7 +67,7 @@ llvm::BasicBlock *Context::getOverflowBB ()
 
   // add PHI-node dependencies
     for (int i = 0;  i < nArgs;  ++i) {
-	reg_info const *rInfo = this->_regInfo.machineReg(i);
+	CMRegInfo const *rInfo = this->_regInfo.machineReg(i);
 	this->_overflowPhiNodes[i]->addIncoming(this->_regState.get (rInfo->id()), srcBB);
     }
 
@@ -81,3 +83,6 @@ llvm::MDNode *Context::overflowWeights ()
     return this->branchProb(1);
 
 } // Context::overflowWeights
+
+} // namespace cfgcg
+} // namespace smlnj

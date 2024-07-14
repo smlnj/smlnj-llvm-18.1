@@ -136,7 +136,7 @@ int main (int argc, char **argv)
 //! points to a dynamically allocated code buffer; this pointer gets
 //! reset if we change the target architecture.
 //
-static Context *gContext = nullptr;
+static smlnj::cfgcg::Context *gContext = nullptr;
 
 /// set the target machine
 //
@@ -149,7 +149,7 @@ bool setTarget (std::string_view target)
 	delete gContext;
     }
 
-    gContext = Context::create (target);
+    gContext = smlnj::cfgcg::Context::create (target);
 
     return (gContext == nullptr);
 

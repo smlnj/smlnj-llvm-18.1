@@ -15,9 +15,9 @@
 namespace CFG_Prim {
 
   // helper function to get LLVM type for numbers
-    inline Type *numType (Context * buf, numkind k, int sz)
+    inline Type *numType (smlnj::cfgcg::Context *cxt, numkind k, int sz)
     {
-	return (k == numkind::INT ? buf->iType(sz) : buf->fType(sz));
+	return (k == numkind::INT ? cxt->iType(sz) : cxt->fType(sz));
     }
 
   // helper function to convert bit size to byte size
@@ -26,35 +26,35 @@ namespace CFG_Prim {
   // helper function to ensure that arguments to arithmetic operations
   // have an LLVM integer type, since we use i64* (or i32*) as the type
   // of ML values
-    inline Value *castArgToInt (Context * buf, unsigned sz, Value *arg)
+    inline Value *castArgToInt (smlnj::cfgcg::Context *cxt, unsigned sz, Value *arg)
     {
-	if (arg->getType() == buf->mlValueTy) {
-	    return buf->build().CreatePtrToInt(arg, buf->iType(sz));
+	if (arg->getType() == cxt->mlValueTy) {
+	    return cxt->build().CreatePtrToInt(arg, cxt->iType(sz));
 	} else {
 	    return arg;
 	}
     }
 
   /***** code generation for the `alloc` type *****/
-    Value *SPECIAL::codegen (Context * buf, Args_t const &args)
+    Value *SPECIAL::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
       // the first argument is the record's descriptor word and the second
       // is the content of the special object.
 	assert (args.size() == 2 && "expected descriptor and content");
-	return buf->allocRecord (buf->asMLValue(args[0]), { args[1] });
+	return cxt->allocRecord (cxt->asMLValue(args[0]), { args[1] });
 
     }
 
-    Value *RECORD::codegen (Context * buf, Args_t const &args)
+    Value *RECORD::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->allocRecord (this->_v_desc.toUInt64(), args);
+	return cxt->allocRecord (this->_v_desc.toUInt64(), args);
 
     } // RECORD::codegen
 
-    Value *RAW_RECORD::codegen (Context * buf, Args_t const &args)
+    Value *RAW_RECORD::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
 	int len = args.size();
-	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
+	Value *allocPtr = cxt->mlReg (smlnj::cfgcg::CMRegId::ALLOC_PTR);
 
 	assert (len == this->_v_fields.size() && "incorrect number of fields");
 
@@ -64,10 +64,10 @@ namespace CFG_Prim {
  */
 
       // write object descriptor
-	buf->createStoreML (buf->uConst(this->_v_desc.toUInt64()), allocPtr);
+	cxt->createStoreML (cxt->uConst(this->_v_desc.toUInt64()), allocPtr);
 
       // compute the object's address and cast it to a ML value
-	Value *obj = buf->asMLValue (buf->createGEP (allocPtr, 1));
+	Value *obj = cxt->asMLValue (cxt->createGEP (allocPtr, 1));
 
       // initialize the object's fields
 	int offset = 0;
@@ -78,65 +78,65 @@ namespace CFG_Prim {
 	      // align the offset
 		offset = (offset + (szb - 1)) & ~(szb - 1);
 	    }
-	    Type *elemTy = numType (buf, fld->get_kind(), fld->get_sz());
+	    Type *elemTy = numType (cxt, fld->get_kind(), fld->get_sz());
             Type *argTy = args[i]->getType();
 	  // get a `char *` pointer to obj+offset
-            auto adr = buf->createGEP (obj, offset);
-            if (argTy == buf->mlValueTy) {
+            auto adr = cxt->createGEP (obj, offset);
+            if (argTy == cxt->mlValueTy) {
               // the field should be a native-sized integer
-                assert (elemTy == buf->intTy && "expected native integer field");
-                buf->createStoreML (args[i], adr);
+                assert (elemTy == cxt->intTy && "expected native integer field");
+                cxt->createStoreML (args[i], adr);
             }
             else {
                 assert (args[i]->getType() == elemTy && "type mismatch");
-                buf->createStore (args[i], adr, szb);
+                cxt->createStore (args[i], adr, szb);
             }
 	    offset += szb;
 	}
       // align the final offset to the native word size
-	offset = (offset + (buf->wordSzInBytes() - 1)) & ~(buf->wordSzInBytes() - 1);
+	offset = (offset + (cxt->wordSzInBytes() - 1)) & ~(cxt->wordSzInBytes() - 1);
 
       // bump the allocation pointer
-	buf->setMLReg (sml_reg_id::ALLOC_PTR, buf->createGEP (obj, offset));
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::ALLOC_PTR, cxt->createGEP (obj, offset));
 
 	return obj;
 
     } // RAW_RECORD::codegen
 
-    Value *RAW_ALLOC::codegen (Context * buf, Args_t const &args)
+    Value *RAW_ALLOC::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
+	Value *allocPtr = cxt->mlReg (smlnj::cfgcg::CMRegId::ALLOC_PTR);
 	int len = this->_v_len;  // length in bytes
 	int align = this->_v_align; // alignment in bytes
 
 	if (! this->_v_desc.isEmpty()) {
-            if (align > buf->wordSzInBytes()) {
+            if (align > cxt->wordSzInBytes()) {
               // adjust the allocation point to be one word before an aligned address
-                allocPtr = buf->createIntToPtr(
-                    buf->createOr(
-                        buf->createPtrToInt(allocPtr),
-                        buf->uConst(align - buf->wordSzInBytes())));
+                allocPtr = cxt->createIntToPtr(
+                    cxt->createOr(
+                        cxt->createPtrToInt(allocPtr),
+                        cxt->uConst(align - cxt->wordSzInBytes())));
             }
 	  // write object descriptor
 	    uint64_t desc = this->_v_desc.valOf().toUInt64();
-	    buf->createStoreML (buf->uConst(desc), allocPtr);
+	    cxt->createStoreML (cxt->uConst(desc), allocPtr);
 	}
         else {
 	    // else tagless object for spilling
-            assert (align == buf->wordSzInBytes()
+            assert (align == cxt->wordSzInBytes()
                 && "unexpected alignment for spill record");
         }
 
       // compute the object's address and cast it to an ML value
-	Value *obj = buf->createBitCast (
-	    buf->createGEP (allocPtr, 1),
-	    buf->mlValueTy);
+	Value *obj = cxt->createBitCast (
+	    cxt->createGEP (allocPtr, 1),
+	    cxt->mlValueTy);
 
       // bump the allocation pointer
-	buf->setMLReg (sml_reg_id::ALLOC_PTR,
-	    buf->createBitCast (
-	        buf->createGEP (buf->i8Ty, allocPtr, len + buf->wordSzInBytes()),
-		buf->ptrTy));
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::ALLOC_PTR,
+	    cxt->createBitCast (
+	        cxt->createGEP (cxt->i8Ty, allocPtr, len + cxt->wordSzInBytes()),
+		cxt->ptrTy));
 
 	return obj;
 
@@ -145,7 +145,7 @@ namespace CFG_Prim {
 
   /***** code generation for the `arith` type *****/
 
-    Value *ARITH::codegen (Context * buf, Args_t const &argv)
+    Value *ARITH::codegen (smlnj::cfgcg::Context *cxt, Args_t const &argv)
     {
 	Value *pair;
 
@@ -153,25 +153,25 @@ namespace CFG_Prim {
 
 	unsigned sz = this->_v_sz;
 	std::vector<Value *> args = {
-	    buf->asInt(sz, argv[0]), buf->asInt(sz, argv[1])
+	    cxt->asInt(sz, argv[0]), cxt->asInt(sz, argv[1])
 	  };
 
 	switch (this->get_oper()) {
 	    case arithop::IADD:
-		pair = buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->sadd32WOvflw() : buf->sadd64WOvflw(),
+		pair = cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->sadd32WOvflw() : cxt->sadd64WOvflw(),
 		    args);
 		break;
 
 	    case arithop::ISUB:
-		pair = buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->ssub32WOvflw() : buf->ssub64WOvflw(),
+		pair = cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->ssub32WOvflw() : cxt->ssub64WOvflw(),
 		    args);
 		break;
 
 	    case arithop::IMUL:
-		pair = buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->smul32WOvflw() : buf->smul64WOvflw(),
+		pair = cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->smul32WOvflw() : cxt->smul64WOvflw(),
 		    args);
 		break;
 
@@ -179,215 +179,215 @@ namespace CFG_Prim {
 	      // can trap on `minInt / ~1`, but the x86-64 hardware generates that trap,
 	      // so we do not need to do anything special.  May want to add explicit
 	      // test in the future.
-		return buf->createSDiv (args[0], args[1]);
+		return cxt->createSDiv (args[0], args[1]);
 
 	    case arithop::IREM:
-		return buf->createSRem (args[0], args[1]);
+		return cxt->createSRem (args[0], args[1]);
 	}
 
-	Value *res = buf->createExtractValue(pair, 0);
-	Value *obit = buf->createExtractValue(pair, 1);
-	llvm::BasicBlock *next = buf->newBB ("ok");
-	buf->build().CreateCondBr(obit, buf->getOverflowBB(), next, buf->overflowWeights());
+	Value *res = cxt->createExtractValue(pair, 0);
+	Value *obit = cxt->createExtractValue(pair, 1);
+	llvm::BasicBlock *next = cxt->newBB ("ok");
+	cxt->build().CreateCondBr(obit, cxt->getOverflowBB(), next, cxt->overflowWeights());
       // switch to the new block for the continuation
-	buf->setInsertPoint (next);
+	cxt->setInsertPoint (next);
 
 	return res;
 
     } // ARITH::codegen
 
-    Value *FLOAT_TO_INT::codegen (Context * buf, Args_t const &args)
+    Value *FLOAT_TO_INT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createFPToSI (args[0], buf->iType (this->_v_to));
+	return cxt->createFPToSI (args[0], cxt->iType (this->_v_to));
 
     } // FLOAT_TO_INT::codegen
 
 
   /***** code generation for the `pure` type *****/
 
-    Value *PURE_ARITH::codegen (Context * buf, Args_t const &args)
+    Value *PURE_ARITH::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
 	unsigned sz = this->_v_sz;
 	switch (this->get_oper()) {
 	    case pureop::ADD:
-		return buf->createAdd(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createAdd(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::SUB:
-		return buf->createSub(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createSub(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::SMUL:  // same as UMUL
 	    case pureop::UMUL:
-		return buf->createMul(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createMul(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::SDIV:
-		return buf->createSDiv(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createSDiv(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::SREM:
-		return buf->createSRem(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createSRem(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::UDIV:
-		return buf->createUDiv(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createUDiv(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::UREM:
-		return buf->createURem(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createURem(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::LSHIFT:
-		return buf->createShl(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createShl(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::RSHIFT:
-		return buf->createAShr(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createAShr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::RSHIFTL:
-		return buf->createLShr(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createLShr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::ORB:
-		return buf->createOr(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createOr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::XORB:
-		return buf->createXor(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createXor(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::ANDB:
-		return buf->createAnd(buf->asInt(sz, args[0]), buf->asInt(sz, args[1]));
+		return cxt->createAnd(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
 	    case pureop::FADD:
-		return buf->createFAdd(args[0], args[1]);
+		return cxt->createFAdd(args[0], args[1]);
 	    case pureop::FSUB:
-		return buf->createFSub(args[0], args[1]);
+		return cxt->createFSub(args[0], args[1]);
 	    case pureop::FMUL:
-		return buf->createFMul(args[0], args[1]);
+		return cxt->createFMul(args[0], args[1]);
 	    case pureop::FDIV:
-		return buf->createFDiv(args[0], args[1]);
+		return cxt->createFDiv(args[0], args[1]);
 	    case pureop::FNEG:
-		return buf->createFNeg(args[0]);
+		return cxt->createFNeg(args[0]);
 	    case pureop::FABS:
-		 return buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->fabs32() : buf->fabs64(),
+		 return cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->fabs32() : cxt->fabs64(),
 		    args);
 	    case pureop::FSQRT:
-		 return buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->sqrt32() : buf->sqrt64(),
+		 return cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->sqrt32() : cxt->sqrt64(),
 		    args);
 	    case pureop::FCOPYSIGN:
-		 return buf->build().CreateCall(
-		    (this->get_sz() == 32) ? buf->sqrt32() : buf->sqrt64(),
+		 return cxt->build().CreateCall(
+		    (this->get_sz() == 32) ? cxt->sqrt32() : cxt->sqrt64(),
 		    args);
 	} // switch
 
     } // PURE_ARITH::codegen
 
-    Value *EXTEND::codegen (Context * buf, Args_t const &args)
+    Value *EXTEND::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
         // the current handling of smaller integer types in the SML/NJ backend is
         // kind of broken, since small-integers are usually represented as tagged
         // values.  This means that if the argument is an MLvalue this operation
         // is a no-op
-        if (args[0]->getType() != buf->mlValueTy) {
+        if (args[0]->getType() != cxt->mlValueTy) {
             if (this->_v_signed) {
-                return buf->createSExt (args[0], buf->iType(this->_v_to));
+                return cxt->createSExt (args[0], cxt->iType(this->_v_to));
             } else {
-                return buf->createZExt (args[0], buf->iType(this->_v_to));
+                return cxt->createZExt (args[0], cxt->iType(this->_v_to));
             }
         }
 	else {
 	    assert (! this->_v_signed && "unexpected sign extension of ML Value");
-            assert (buf->iType(this->_v_to) == buf->intTy);
+            assert (cxt->iType(this->_v_to) == cxt->intTy);
             return args[0];
         }
 
     } // EXTEND::codegen
 
-    Value *TRUNC::codegen (Context * buf, Args_t const &args)
+    Value *TRUNC::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createTrunc (args[0], buf->iType(this->_v_to));
+	return cxt->createTrunc (args[0], cxt->iType(this->_v_to));
 
     } // TRUNC::codegen
 
-    Value *INT_TO_FLOAT::codegen (Context * buf, Args_t const &args)
+    Value *INT_TO_FLOAT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createSIToFP (args[0], buf->fType(this->_v_to));
+	return cxt->createSIToFP (args[0], cxt->fType(this->_v_to));
 
     } // INT_TO_FLOAT::codegen
 
-    Value *FLOAT_TO_BITS::codegen (Context * buf, Args_t const &args)
+    Value *FLOAT_TO_BITS::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createBitCast (args[0], buf->iType(this->_v_sz));
+	return cxt->createBitCast (args[0], cxt->iType(this->_v_sz));
 
     } // FLOAT_TO_BITS::codegen
 
-    Value *BITS_TO_FLOAT::codegen (Context * buf, Args_t const &args)
+    Value *BITS_TO_FLOAT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createBitCast (args[0], buf->fType(this->_v_sz));
+	return cxt->createBitCast (args[0], cxt->fType(this->_v_sz));
 
     } // BITS_TO_FLOAT::codegen
 
-    Value *PURE_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
+    Value *PURE_SUBSCRIPT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Value *adr = buf->createGEP (buf->asPtr(args[0]), buf->asInt(args[1]));
-	return buf->build().CreateLoad (buf->mlValueTy, adr);
+	Value *adr = cxt->createGEP (cxt->asPtr(args[0]), cxt->asInt(args[1]));
+	return cxt->build().CreateLoad (cxt->mlValueTy, adr);
 
     } // PURE_SUBSCRIPT::codegen
 
-    Value *PURE_RAW_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
+    Value *PURE_RAW_SUBSCRIPT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
-	Value *adr = buf->createGEP (elemTy, args[0], args[1]);
+	Value *adr = cxt->createGEP (elemTy, args[0], args[1]);
 
-	return buf->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
+	return cxt->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
 
     } // PURE_RAW_SUBSCRIPT::codegen
 
-    Value *RAW_SELECT::codegen (Context * buf, Args_t const &args)
+    Value *RAW_SELECT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
 /* QUESTION: should we specialize the case where the offset is 0? */
-	Value *adr = buf->createGEP (
-		buf->i8Ty,
-		buf->asPtr(args[0]),
-		buf->uConst (this->_v_offset));
+	Value *adr = cxt->createGEP (
+		cxt->i8Ty,
+		cxt->asPtr(args[0]),
+		cxt->uConst (this->_v_offset));
 
-	return buf->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
+	return cxt->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
 
     } // RAW_SELECT::codegen
 
 
   /***** code generation for the `looker` type *****/
 
-    Value *DEREF::codegen (Context * buf, Args_t const &args)
+    Value *DEREF::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->build().CreateLoad (buf->mlValueTy, buf->asPtr(args[0]));
+	return cxt->build().CreateLoad (cxt->mlValueTy, cxt->asPtr(args[0]));
 
     } // DEREF::codegen
 
-    Value *SUBSCRIPT::codegen (Context * buf, Args_t const &args)
+    Value *SUBSCRIPT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Value *baseAdr = buf->asPtr(args[0]);
-	Value *adr = buf->createGEP(baseAdr, buf->asInt(args[1]));
+	Value *baseAdr = cxt->asPtr(args[0]);
+	Value *adr = cxt->createGEP(baseAdr, cxt->asInt(args[1]));
 // QUESTION: should we mark the load as volatile?
-	return buf->build().CreateLoad (buf->mlValueTy, adr);
+	return cxt->build().CreateLoad (cxt->mlValueTy, adr);
 
     } // SUBSCRIPT::codegen
 
-    Value *RAW_LOAD::codegen (Context * buf, Args_t const &args)
+    Value *RAW_LOAD::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
       // RAW_LOAD assumes byte addressing, so we compute the address as a `char *`
-	Value *adr = buf->createGEP (buf->i8Ty, args[0], args[1]);
+	Value *adr = cxt->createGEP (cxt->i8Ty, args[0], args[1]);
 
 // QUESTION: should we mark the load as volatile?
-	return buf->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
+	return cxt->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
 
     } // RAW_LOAD::codegen
 
-    Value *RAW_SUBSCRIPT::codegen (Context * buf, Args_t const &args)
+    Value *RAW_SUBSCRIPT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
-	Value *adr = buf->createGEP (elemTy, args[0], args[1]);
+	Value *adr = cxt->createGEP (elemTy, args[0], args[1]);
 
 // QUESTION: should we mark the load as volatile?
-	return buf->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
+	return cxt->createLoad (elemTy, adr, bitsToBytes(this->_v_sz));
 
     } // RAW_SUBSCRIPT::codegen
 
-    Value *GET_HDLR::codegen (Context * buf, Args_t const &args)
+    Value *GET_HDLR::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->mlReg (sml_reg_id::EXN_HNDLR);
+	return cxt->mlReg (smlnj::cfgcg::CMRegId::EXN_HNDLR);
 
     } // GET_HDLR::codegen
 
-    Value *GET_VAR::codegen (Context * buf, Args_t const &args)
+    Value *GET_VAR::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->mlReg (sml_reg_id::VAR_PTR);
+	return cxt->mlReg (smlnj::cfgcg::CMRegId::VAR_PTR);
 
     } // GET_VAR::codegen
 
@@ -395,92 +395,92 @@ namespace CFG_Prim {
   /***** code generation for the `setter` type *****/
 
   // utility function to generate a store-list update
-    inline void recordStore (Context *buf, Value *adr)
+    inline void recordStore (smlnj::cfgcg::Context *cxt, Value *adr)
     {
-	Value *allocPtr = buf->mlReg (sml_reg_id::ALLOC_PTR);
-	Value *storePtr = buf->mlReg (sml_reg_id::STORE_PTR);
+	Value *allocPtr = cxt->mlReg (smlnj::cfgcg::CMRegId::ALLOC_PTR);
+	Value *storePtr = cxt->mlReg (smlnj::cfgcg::CMRegId::STORE_PTR);
 
       // write the address into the store-list object
-	buf->createStoreML (adr, buf->createGEP (allocPtr, 0));
+	cxt->createStoreML (adr, cxt->createGEP (allocPtr, 0));
       // write the link field
-	buf->createStoreML (storePtr, buf->createGEP (allocPtr, 1));
+	cxt->createStoreML (storePtr, cxt->createGEP (allocPtr, 1));
       // update the store pointer
-	buf->setMLReg (sml_reg_id::STORE_PTR, allocPtr);
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::STORE_PTR, allocPtr);
       // bump the allocation pointer
-	buf->setMLReg (sml_reg_id::ALLOC_PTR, buf->createGEP (allocPtr, 2));
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::ALLOC_PTR, cxt->createGEP (allocPtr, 2));
 
     }
 
-    void UNBOXED_UPDATE::codegen (Context * buf, Args_t const &args)
+    void UNBOXED_UPDATE::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	buf->createStoreML (args[2], buf->createGEP (buf->mlValueTy, args[0], args[1]));
+	cxt->createStoreML (args[2], cxt->createGEP (cxt->mlValueTy, args[0], args[1]));
 
     } // UNBOXED_UPDATE::codegen
 
-    void UPDATE::codegen (Context * buf, Args_t const &args)
+    void UPDATE::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Value *adr = buf->createGEP (buf->mlValueTy, args[0], args[1]);
+	Value *adr = cxt->createGEP (cxt->mlValueTy, args[0], args[1]);
 
-	recordStore (buf, adr);
+	recordStore (cxt, adr);
 
-	buf->createStoreML (args[2], adr);
+	cxt->createStoreML (args[2], adr);
 
     } // UPDATE::codegen
 
-    void UNBOXED_ASSIGN::codegen (Context * buf, Args_t const &args)
+    void UNBOXED_ASSIGN::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	buf->createStore (
-	    buf->asInt(args[1]),
-	    buf->asMLValue (args[0]),
-	    buf->wordSzInBytes());
+	cxt->createStore (
+	    cxt->asInt(args[1]),
+	    cxt->asMLValue (args[0]),
+	    cxt->wordSzInBytes());
 
     } // UNBOXED_ASSIGN::codegen
 
-    void ASSIGN::codegen (Context * buf, Args_t const &args)
+    void ASSIGN::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	recordStore (buf, args[0]);
+	recordStore (cxt, args[0]);
 
-	buf->createStoreML (args[1], args[0]);
+	cxt->createStoreML (args[1], args[0]);
 
     } // ASSIGN::codegen
 
-    void RAW_UPDATE::codegen (Context * buf, Args_t const &args)
+    void RAW_UPDATE::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
-	Value *adr = buf->createGEP (elemTy, args[0], args[1]);
+	Value *adr = cxt->createGEP (elemTy, args[0], args[1]);
 
-        if (args[2]->getType() == buf->mlValueTy) {
-            assert (elemTy == buf->intTy && "expected native integer field");
-            return buf->createStoreML (args[2], adr);
+        if (args[2]->getType() == cxt->mlValueTy) {
+            assert (elemTy == cxt->intTy && "expected native integer field");
+            return cxt->createStoreML (args[2], adr);
         }
         else {
-	    return buf->createStore (args[2], adr, bitsToBytes(this->_v_sz));
+	    return cxt->createStore (args[2], adr, bitsToBytes(this->_v_sz));
         }
 
     } // RAW_UPDATE::codegen
 
-    void RAW_STORE::codegen (Context * buf, Args_t const &args)
+    void RAW_STORE::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	Type *elemTy = numType (buf, this->_v_kind, this->_v_sz);
+	Type *elemTy = numType (cxt, this->_v_kind, this->_v_sz);
 
       // RAW_STORE assumes byte addressing, so we compute the address as a `char *`
       // and then bitcast to the desired pointer type for the store
-	Value *adr = buf->createGEP (buf->i8Ty, args[0], args[1]);
+	Value *adr = cxt->createGEP (cxt->i8Ty, args[0], args[1]);
 
-	return buf->createStore (args[2], adr, bitsToBytes(this->_v_sz));
+	return cxt->createStore (args[2], adr, bitsToBytes(this->_v_sz));
 
     } // RAW_STORE::codegen
 
-    void SET_HDLR::codegen (Context * buf, Args_t const &args)
+    void SET_HDLR::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	buf->setMLReg (sml_reg_id::EXN_HNDLR, args[0]);
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::EXN_HNDLR, args[0]);
 
     } // SETHDLR::codegen
 
-    void SET_VAR::codegen (Context * buf, Args_t const &args)
+    void SET_VAR::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	buf->setMLReg (sml_reg_id::VAR_PTR, args[0]);
+	cxt->setMLReg (smlnj::cfgcg::CMRegId::VAR_PTR, args[0]);
 
     } // SETVAR::codegen
 
@@ -502,17 +502,17 @@ namespace CFG_Prim {
 	    llvm::ICmpInst::ICMP_NE	// (unsigned) NEQ
 	};
 
-    Value *CMP::codegen (Context * buf, Args_t const &args)
+    Value *CMP::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
 	int idx = 2 * (static_cast<int>(this->_v_oper) - 1);
 	if (! this->_v_signed) {
 	    idx += 1;
 	}
 
-	return buf->createICmp (
+	return cxt->createICmp (
 	    ICmpMap[idx],
-	    buf->asInt(this->_v_sz, args[0]),
-	    buf->asInt(this->_v_sz, args[1]));
+	    cxt->asInt(this->_v_sz, args[0]),
+	    cxt->asInt(this->_v_sz, args[1]));
 
     } // CMP::codegen
 
@@ -533,47 +533,47 @@ namespace CFG_Prim {
 	    llvm::FCmpInst::FCMP_UEQ	// F_UE
 	};
 
-    Value *FCMP::codegen (Context * buf, Args_t const &args)
+    Value *FCMP::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createFCmp (FCmpMap[static_cast<int>(this->_v_oper) - 1], args[0], args[1]);
+	return cxt->createFCmp (FCmpMap[static_cast<int>(this->_v_oper) - 1], args[0], args[1]);
 
     } // FCMP::codegen
 
-    Value *FSGN::codegen (Context * buf, Args_t const &args)
+    Value *FSGN::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
       // bitcast to integer type of same size
-	Value *asInt = buf->createBitCast (args[0], buf->iType (this->_v0));
+	Value *asInt = cxt->createBitCast (args[0], cxt->iType (this->_v0));
 
-	return buf->createICmpSLT(asInt, buf->iConst(this->_v0, 0));
+	return cxt->createICmpSLT(asInt, cxt->iConst(this->_v0, 0));
 
     } // FSGN::codegen
 
-    Value *PEQL::codegen (Context * buf, Args_t const &args)
+    Value *PEQL::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createICmpEQ(args[0], args[1]);
+	return cxt->createICmpEQ(args[0], args[1]);
 
     } // PEQL::codegen
 
-    Value *PNEQ::codegen (Context * buf, Args_t const &args)
+    Value *PNEQ::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-	return buf->createICmpNE(args[0], args[1]);
+	return cxt->createICmpNE(args[0], args[1]);
 
     } // PNEQ::codegen
 
-    Value *LIMIT::codegen (Context * buf, Args_t const &args)
+    Value *LIMIT::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
 	unsigned int amt = this->_v0;
-	unsigned int allocSlop = buf->targetInfo()->allocSlopSzb;
+	unsigned int allocSlop = cxt->targetInfo()->allocSlopSzb;
 	if (amt > allocSlop) {
-	    return buf->createICmp(llvm::ICmpInst::ICMP_UGT,
-		buf->createAdd (
-		    buf->mlReg(sml_reg_id::ALLOC_PTR),
-		    buf->uConst(amt - allocSlop)),
-		buf->asInt (buf->mlReg(sml_reg_id::LIMIT_PTR)));
+	    return cxt->createICmp(llvm::ICmpInst::ICMP_UGT,
+		cxt->createAdd (
+		    cxt->mlReg(smlnj::cfgcg::CMRegId::ALLOC_PTR),
+		    cxt->uConst(amt - allocSlop)),
+		cxt->asInt (cxt->mlReg(smlnj::cfgcg::CMRegId::LIMIT_PTR)));
 	} else {
-	    return buf->createICmp(llvm::ICmpInst::ICMP_UGT,
-		buf->asInt (buf->mlReg(sml_reg_id::ALLOC_PTR)),
-		buf->asInt (buf->mlReg(sml_reg_id::LIMIT_PTR)));
+	    return cxt->createICmp(llvm::ICmpInst::ICMP_UGT,
+		cxt->asInt (cxt->mlReg(smlnj::cfgcg::CMRegId::ALLOC_PTR)),
+		cxt->asInt (cxt->mlReg(smlnj::cfgcg::CMRegId::LIMIT_PTR)));
 	}
 
     } // LIMIT::codegen

@@ -30,7 +30,7 @@
 /*DEBUG*/#include "llvm/Support/Debug.h"
 
 #include "lambda-var.hpp"
-#include "sml-registers.hpp"
+#include "cm-registers.hpp"
 
 using Value = llvm::Value;
 using Type = llvm::Type;
@@ -50,6 +50,9 @@ namespace CFG {
     class cluster;
     enum class frag_kind;
 }
+
+namespace smlnj {
+namespace cfgcg {
 
 struct TargetInfo;
 
@@ -133,7 +136,7 @@ class Context : public llvm::LLVMContext {
     void setupFragEntry (CFG::frag *frag, std::vector<llvm::PHINode *> &phiNodes);
 
     /// get the LLVM value that represents the specified SML register
-    Value *mlReg (sml_reg_id r)
+    Value *mlReg (CMRegId r)
     {
         Value *reg = this->_regState.get(r);
         if (reg == nullptr) {
@@ -144,7 +147,7 @@ class Context : public llvm::LLVMContext {
     }
 
     /// assign a value to an SML register
-    void setMLReg (sml_reg_id r, Value *v)
+    void setMLReg (CMRegId r, Value *v)
     {
         Value *reg = this->_regState.get(r);
         if (reg == nullptr) {
@@ -154,9 +157,9 @@ class Context : public llvm::LLVMContext {
         }
     }
 
-    /// save and restore the SML register state to a cache object
-    void saveSMLRegState (reg_state & cache) { cache.copyFrom (this->_regState); }
-    void restoreSMLRegState (reg_state const & cache) { this->_regState.copyFrom (cache); }
+    /// save and restore the CM register state to a cache object
+    void saveSMLRegState (CMRegState & cache) { cache.copyFrom (this->_regState); }
+    void restoreSMLRegState (CMRegState const & cache) { this->_regState.copyFrom (cache); }
 
     /// target parameters
 
@@ -187,11 +190,11 @@ class Context : public llvm::LLVMContext {
     Value *alignedAllocPtr ()
     {
         if (this->is64Bit()) {
-            return this->mlReg (sml_reg_id::ALLOC_PTR);
+            return this->mlReg (CMRegId::ALLOC_PTR);
         } else {
             return this->createIntToPtr(
                 this->createOr(
-                    this->createPtrToInt (this->mlReg (sml_reg_id::ALLOC_PTR)),
+                    this->createPtrToInt (this->mlReg (CMRegId::ALLOC_PTR)),
                     this->uConst (4)));
         }
     }
@@ -800,8 +803,8 @@ class Context : public llvm::LLVMContext {
     std::vector<llvm::PHINode *> _overflowPhiNodes;
 
     // tracking the state of the SML registers
-    sml_registers               _regInfo;       // target-specific register info
-    reg_state                   _regState;      // current register values
+    CMRegs               _regInfo;       // target-specific register info
+    CMRegState                   _regState;      // current register values
 
     /// target-machine properties
     int64_t _wordSzB;
@@ -843,10 +846,10 @@ class Context : public llvm::LLVMContext {
     }
 
     /// function for loading a special register from memory
-    Value *_loadMemReg (sml_reg_id r);
+    Value *_loadMemReg (CMRegId r);
 
     /// function for setting a special memory register
-    void _storeMemReg (sml_reg_id r, Value *v);
+    void _storeMemReg (CMRegId r, Value *v);
 
     /// information about JWA arguments
     struct arg_info {
@@ -872,5 +875,8 @@ class Context : public llvm::LLVMContext {
     /// private constructor
     Context (struct TargetInfo const *target);
 };
+
+} // namespace cfgcg
+} // namespace smlnj
 
 #endif // !_CONTEXT_HPP_

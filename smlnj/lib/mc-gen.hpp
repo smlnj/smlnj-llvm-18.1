@@ -16,6 +16,9 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/IR/LegacyPassManager.h" /* needed for code gen */
 
+namespace smlnj {
+namespace cfgcg {
+
 class MCGen {
   public:
 
@@ -52,5 +55,8 @@ class MCGen {
     llvm::PassBuilder *_pb;
 
 };
+
+} // namespace cfgcg
+} // namespace smlnj
 
 #endif // !_MC_GEN_HPP_

@@ -19,7 +19,7 @@
 // These are just for testing purposes
 bool disableGC = false;
 
-static Context *gContext = nullptr;
+static smlnj::cfgcg::Context *gContext = nullptr;
 
 bool setTarget (std::string const &target)
 {
@@ -30,7 +30,7 @@ bool setTarget (std::string const &target)
 	delete gContext;
     }
 
-    gContext = Context::create (target);
+    gContext = smlnj::cfgcg::Context::create (target);
 
     return (gContext == nullptr);
 

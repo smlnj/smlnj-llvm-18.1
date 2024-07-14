@@ -269,7 +269,7 @@ namespace CFG_Prim {
         virtual ~alloc ();
         // pickler method suppressed
         static alloc * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf, Args_t const &args) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {_con_SPECIAL = 1, _con_RECORD, _con_RAW_RECORD, _con_RAW_ALLOC};
@@ -284,7 +284,7 @@ namespace CFG_Prim {
         { }
         ~SPECIAL ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class RECORD : public alloc {
@@ -310,7 +310,7 @@ namespace CFG_Prim {
         {
             this->_v_mut = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         asdl::integer _v_desc;
@@ -348,7 +348,7 @@ namespace CFG_Prim {
         {
             this->_v_fields = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         asdl::integer _v_desc;
@@ -387,7 +387,7 @@ namespace CFG_Prim {
         {
             this->_v_len = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         asdl::option<asdl::integer> _v_desc;
@@ -402,7 +402,7 @@ namespace CFG_Prim {
         virtual ~arith ();
         // pickler method suppressed
         static arith * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf, Args_t const &args) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {_con_ARITH = 1, _con_FLOAT_TO_INT};
@@ -434,7 +434,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         arithop _v_oper;
@@ -472,7 +472,7 @@ namespace CFG_Prim {
         {
             this->_v_to = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         rounding_mode _v_mode;
@@ -510,7 +510,7 @@ namespace CFG_Prim {
         virtual ~pure ();
         // pickler method suppressed
         static pure * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf, Args_t const &args) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {
@@ -552,7 +552,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         pureop _v_oper;
@@ -589,7 +589,7 @@ namespace CFG_Prim {
         {
             this->_v_to = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         bool _v_signed;
@@ -619,7 +619,7 @@ namespace CFG_Prim {
         {
             this->_v_to = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         int _v_from;
@@ -648,7 +648,7 @@ namespace CFG_Prim {
         {
             this->_v_to = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         int _v_from;
@@ -669,7 +669,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         int _v_sz;
@@ -689,7 +689,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         int _v_sz;
@@ -700,7 +700,7 @@ namespace CFG_Prim {
         { }
         ~PURE_SUBSCRIPT ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class PURE_RAW_SUBSCRIPT : public pure {
@@ -726,7 +726,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -764,7 +764,7 @@ namespace CFG_Prim {
         {
             this->_v_offset = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -776,7 +776,7 @@ namespace CFG_Prim {
         virtual ~looker ();
         // pickler method suppressed
         static looker * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf, Args_t const &args) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {
@@ -798,7 +798,7 @@ namespace CFG_Prim {
         { }
         ~DEREF ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct SUBSCRIPT : public looker {
@@ -807,7 +807,7 @@ namespace CFG_Prim {
         { }
         ~SUBSCRIPT ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class RAW_SUBSCRIPT : public looker {
@@ -833,7 +833,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -862,7 +862,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -874,7 +874,7 @@ namespace CFG_Prim {
         { }
         ~GET_HDLR ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct GET_VAR : public looker {
@@ -883,7 +883,7 @@ namespace CFG_Prim {
         { }
         ~GET_VAR ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class setter {
@@ -891,7 +891,7 @@ namespace CFG_Prim {
         virtual ~setter ();
         // pickler method suppressed
         static setter * read (asdl::instream & is);
-        virtual void codegen (Context *buf, Args_t const &args) = 0;
+        virtual void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {
@@ -915,7 +915,7 @@ namespace CFG_Prim {
         { }
         ~UNBOXED_UPDATE ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct UPDATE : public setter {
@@ -924,7 +924,7 @@ namespace CFG_Prim {
         { }
         ~UPDATE ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct UNBOXED_ASSIGN : public setter {
@@ -933,7 +933,7 @@ namespace CFG_Prim {
         { }
         ~UNBOXED_ASSIGN ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct ASSIGN : public setter {
@@ -942,7 +942,7 @@ namespace CFG_Prim {
         { }
         ~ASSIGN ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class RAW_UPDATE : public setter {
@@ -968,7 +968,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -997,7 +997,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         numkind _v_kind;
@@ -1009,7 +1009,7 @@ namespace CFG_Prim {
         { }
         ~SET_HDLR ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct SET_VAR : public setter {
@@ -1018,7 +1018,7 @@ namespace CFG_Prim {
         { }
         ~SET_VAR ();
         // pickler method suppressed
-        void codegen (Context *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     enum class cmpop {GT = 1, GTE, LT, LTE, EQL, NEQ};
@@ -1047,7 +1047,7 @@ namespace CFG_Prim {
         virtual ~branch ();
         // pickler method suppressed
         static branch * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf, Args_t const &args) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
       protected:
         enum _tag_t {_con_CMP = 1, _con_FCMP, _con_FSGN, _con_PEQL, _con_PNEQ, _con_LIMIT
@@ -1088,7 +1088,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         cmpop _v_oper;
@@ -1118,7 +1118,7 @@ namespace CFG_Prim {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         fcmpop _v_oper;
@@ -1139,7 +1139,7 @@ namespace CFG_Prim {
         {
             this->_v0 = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         int _v0;
@@ -1150,7 +1150,7 @@ namespace CFG_Prim {
         { }
         ~PEQL ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     struct PNEQ : public branch {
@@ -1159,7 +1159,7 @@ namespace CFG_Prim {
         { }
         ~PNEQ ();
         // pickler method suppressed
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
     };
     class LIMIT : public branch {
@@ -1177,7 +1177,7 @@ namespace CFG_Prim {
         {
             this->_v0 = v;
         }
-        Value *codegen (Context *buf, Args_t const &args);
+        Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 
       private:
         unsigned int _v0;
@@ -1198,7 +1198,7 @@ namespace CFG {
         virtual ~ty ();
         // pickler method suppressed
         static ty * read (asdl::instream & is);
-        virtual Type *codegen (Context *buf) = 0;
+        virtual Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
 	bool isNUMt () { return this->_tag == _con_NUMt; }
 	bool isFLTt () { return this->_tag == _con_FLTt; }
 
@@ -1216,7 +1216,7 @@ namespace CFG {
         { }
         ~LABt ();
         // pickler method suppressed
-        Type *codegen (Context *buf);
+        Type *codegen (smlnj::cfgcg::Context *cxt);
 
     };
     struct PTRt : public ty {
@@ -1225,7 +1225,7 @@ namespace CFG {
         { }
         ~PTRt ();
         // pickler method suppressed
-        Type *codegen (Context *buf);
+        Type *codegen (smlnj::cfgcg::Context *cxt);
 
     };
     struct TAGt : public ty {
@@ -1234,7 +1234,7 @@ namespace CFG {
         { }
         ~TAGt ();
         // pickler method suppressed
-        Type *codegen (Context *buf);
+        Type *codegen (smlnj::cfgcg::Context *cxt);
 
     };
     class NUMt : public ty {
@@ -1252,7 +1252,7 @@ namespace CFG {
         {
             this->_v_sz = v;
         }
-        Type *codegen (Context *buf);
+        Type *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         int _v_sz;
@@ -1272,7 +1272,7 @@ namespace CFG {
         {
             this->_v_sz = v;
         }
-        Type *codegen (Context *buf);
+        Type *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         int _v_sz;
@@ -1284,7 +1284,7 @@ namespace CFG {
         virtual ~exp ();
         // pickler method suppressed
         static exp * read (asdl::instream & is);
-        virtual Value *codegen (Context *buf) = 0;
+        virtual Value *codegen (smlnj::cfgcg::Context *cxt) = 0;
 	bool isLABEL () { return (this->_tag == _con_LABEL); }
 
 
@@ -1318,7 +1318,7 @@ namespace CFG {
         {
             this->_v_name = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         LambdaVar::lvar _v_name;
@@ -1338,7 +1338,7 @@ namespace CFG {
         {
             this->_v_name = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         LambdaVar::lvar _v_name;
@@ -1366,7 +1366,7 @@ namespace CFG {
         {
             this->_v_sz = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         asdl::integer _v_iv;
@@ -1395,7 +1395,7 @@ namespace CFG {
         {
             this->_v_args = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         CFG_Prim::looker * _v_oper;
@@ -1424,7 +1424,7 @@ namespace CFG {
         {
             this->_v_args = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         CFG_Prim::pure * _v_oper;
@@ -1453,7 +1453,7 @@ namespace CFG {
         {
             this->_v_arg = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         int _v_idx;
@@ -1482,7 +1482,7 @@ namespace CFG {
         {
             this->_v_arg = v;
         }
-        Value *codegen (Context *buf);
+        Value *codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         int _v_idx;
@@ -1514,7 +1514,7 @@ namespace CFG {
         {
             this->_v_ty = v;
         }
-        void bind (Context *buf, Value *v) { buf->insertVal (this->_v_name, v); }
+        void bind (smlnj::cfgcg::Context *cxt, Value *v) { cxt->insertVal (this->_v_name, v); }
 
       private:
         LambdaVar::lvar _v_name;
@@ -1528,8 +1528,8 @@ namespace CFG {
         virtual ~stm ();
         // pickler method suppressed
         static stm * read (asdl::instream & is);
-        virtual void init (Context *buf, bool blkEntry) = 0;
-        virtual void codegen (Context *buf) = 0;
+        virtual void init (smlnj::cfgcg::Context *cxt, bool blkEntry) = 0;
+        virtual void codegen (smlnj::cfgcg::Context *cxt) = 0;
         llvm::BasicBlock *bb () { return this->_bb; }
 
 
@@ -1552,7 +1552,7 @@ namespace CFG {
         { }
         _tag_t _tag;
         llvm::BasicBlock *_bb;  // for the first stm in a block
-	void _initBB (Context *buf, bool blkEntry);
+	void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
 
     };
     class LET : public stm {
@@ -1586,8 +1586,8 @@ namespace CFG {
         {
             this->_v2 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1634,8 +1634,8 @@ namespace CFG {
         {
             this->_v3 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1675,8 +1675,8 @@ namespace CFG {
         {
             this->_v2 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1715,8 +1715,8 @@ namespace CFG {
         {
             this->_v2 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1747,8 +1747,8 @@ namespace CFG {
         {
             this->_v1 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1778,8 +1778,8 @@ namespace CFG {
         {
             this->_v1 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1833,8 +1833,8 @@ namespace CFG {
         {
             this->_v4 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1883,8 +1883,8 @@ namespace CFG {
         {
             this->_v3 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1924,8 +1924,8 @@ namespace CFG {
         {
             this->_v2 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -1964,8 +1964,8 @@ namespace CFG {
         {
             this->_v2 = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -2038,8 +2038,8 @@ namespace CFG {
         {
             this->_v_k = v;
         }
-        void init (Context *buf, bool blkEntry);
-        void codegen (Context *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
 
       private:
@@ -2096,8 +2096,8 @@ namespace CFG {
         {
             this->_v_body = v;
         }
-        void init (Context *buf);
-        void codegen (Context *buf, cluster *cluster);
+        void init (smlnj::cfgcg::Context *cxt);
+        void codegen (smlnj::cfgcg::Context *cxt, cluster *cluster);
 	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
 	Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
 	void addIncoming (int i, Value *v, llvm::BasicBlock *bblk)
@@ -2187,8 +2187,8 @@ namespace CFG {
         {
             this->_v_frags = v;
         }
-        void init (Context *buf, bool isFirst);
-        void codegen (Context *buf, bool isFirst);
+        void init (smlnj::cfgcg::Context *cxt, bool isFirst);
+        void codegen (smlnj::cfgcg::Context *cxt, bool isFirst);
 	llvm::Function *fn () const { return this->_fn; }
 	frag *entry () const { return this->_v_frags[0]; }
 
@@ -2233,7 +2233,7 @@ namespace CFG {
         {
             this->_v_fns = v;
         }
-        void codegen (Context *buf);
+        void codegen (smlnj::cfgcg::Context *cxt);
 
       private:
         std::string _v_srcFile;
