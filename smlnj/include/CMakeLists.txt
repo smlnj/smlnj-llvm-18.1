@@ -10,7 +10,7 @@ set(SRCS
   lambda-var.hpp
   object-file.hpp
   objfile-stream.hpp
-  sml-registers.hpp
+  cm-registers.hpp
   target-info.hpp)
 
 install(DIRECTORY asdl TYPE INCLUDE)

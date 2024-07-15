@@ -33,6 +33,11 @@ project(smlnj-llvm
   HOMEPAGE_URL https://smlnj.org
   LANGUAGES C CXX)
 
+# root binary and source directories for the SML/NJ LLVM Library
+#
+set (SMLNJ_LLVM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
+set (SMLNJ_LLVM_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
+
 # build options
 #
 option (SMLNJ_CFGC_BUILD

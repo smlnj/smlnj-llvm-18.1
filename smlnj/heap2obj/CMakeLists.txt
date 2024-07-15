@@ -22,7 +22,8 @@ add_dependencies(heap2obj llvm-headers)
 target_compile_definitions(heap2obj PRIVATE "-DSMLNJ_TARGET_TRIPLE=\"${LLVM_HOST_TRIPLE}\"")
 target_compile_options(heap2obj PRIVATE -fno-exceptions -fno-rtti)
 target_include_directories(heap2obj PRIVATE
-  ${CMAKE_BINARY_DIR}/llvm/include ${CMAKE_SOURCE_DIR}/llvm/include)
+  ${SMLNJ_LLVM_BINARY_DIR}/llvm/include
+  ${SMLNJ_LLVM_SOURCE_DIR}/llvm/include)
 target_link_libraries(heap2obj ${LLVM_LIBS})
 
 install(TARGETS heap2obj)
