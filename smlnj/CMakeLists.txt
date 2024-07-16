@@ -62,6 +62,14 @@ if(PROJECT_IS_TOP_LEVEL)
 
   # arrange for the config.h file to be installed
   install(DIRECTORY ${include_dir} TYPE INCLUDE)
+
+else() # NOT PROJECT_IS_TOP_LEVEL
+
+  # when we are building the code-generator library as a sub-project, we need
+  # to specify where to find the SML/NJ config.h file.
+  #
+  include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/src/include)
+
 endif()
 
 include_directories(include)
