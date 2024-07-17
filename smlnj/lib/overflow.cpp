@@ -46,7 +46,7 @@ llvm::BasicBlock *Context::getOverflowBB ()
 	}
 
       // fetch the raise_overflow code address from the stack
-	Value *raiseFn = _loadFromStack (this->_target->raiseOvflwOffset, "raiseOverflow");
+	llvm::Value *raiseFn = _loadFromStack (this->_target->raiseOvflwOffset, "raiseOverflow");
 
       // call the raise_overflow function  We use a non-tail call here so that the return
       // address, which is in the faulting module, is pushed on the stack and made available

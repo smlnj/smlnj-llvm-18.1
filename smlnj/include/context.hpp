@@ -32,8 +32,7 @@
 #include "lambda-var.hpp"
 #include "cm-registers.hpp"
 
-using Value = llvm::Value;
-using Type = llvm::Type;
+using Types_t = std::vector<llvm::Type *>;
 using Args_t = std::vector<llvm::Value *>;
 
 namespace llvm {
@@ -118,12 +117,12 @@ class Context : public llvm::LLVMContext {
     /// create a function type from a vector of parameter types.  This function adds
     /// the extra types corresponding to the SML registers and for the unused
     /// argument registers for continuations
-    llvm::FunctionType *createFnTy (frag_kind kind, std::vector<Type *> const & tys) const;
+    llvm::FunctionType *createFnTy (frag_kind kind, Types_t const & tys) const;
 
     /// create a vector to hold the types of function paramaters (including for fragments),
     /// where `n` is the number of arguments to the call.  This method initialize the
     /// prefix of the vector with the types of the SML registers
-    std::vector<Type *> createParamTys (frag_kind kind, int n) const;
+    Types_t createParamTys (frag_kind kind, int n) const;
 
     /// create a vector to hold the arguments of a call (APPLY/THROW/GOTO), where
     /// `n` is the number of arguments to the call.  This method initialize the
@@ -136,9 +135,9 @@ class Context : public llvm::LLVMContext {
     void setupFragEntry (CFG::frag *frag, std::vector<llvm::PHINode *> &phiNodes);
 
     /// get the LLVM value that represents the specified SML register
-    Value *mlReg (CMRegId r)
+    llvm::Value *mlReg (CMRegId r)
     {
-        Value *reg = this->_regState.get(r);
+        llvm::Value *reg = this->_regState.get(r);
         if (reg == nullptr) {
             return this->_loadMemReg(r);
         } else {
@@ -147,9 +146,9 @@ class Context : public llvm::LLVMContext {
     }
 
     /// assign a value to an SML register
-    void setMLReg (CMRegId r, Value *v)
+    void setMLReg (CMRegId r, llvm::Value *v)
     {
-        Value *reg = this->_regState.get(r);
+        llvm::Value *reg = this->_regState.get(r);
         if (reg == nullptr) {
             return this->_storeMemReg(r, v);
         } else {
@@ -187,7 +186,7 @@ class Context : public llvm::LLVMContext {
     /// align the allocation pointer for 64 bits on 32-bit machines.  The resulting
     /// alloc pointer points to the location of the object descriptor, so adding
     /// wordSzInBytes() should produce an 8-byte aligned address
-    Value *alignedAllocPtr ()
+    llvm::Value *alignedAllocPtr ()
     {
         if (this->is64Bit()) {
             return this->mlReg (CMRegId::ALLOC_PTR);
@@ -200,16 +199,16 @@ class Context : public llvm::LLVMContext {
     }
 
     /// @{
-    Type *voidTy;               ///< the "void" type
+    llvm::Type *voidTy;         ///< the "void" type
     llvm::IntegerType *i8Ty;    ///< 8-bit integer type
     llvm::IntegerType *i16Ty;   ///< 16-bit integer type
     llvm::IntegerType *i32Ty;   ///< 32-bit integer type
     llvm::IntegerType *i64Ty;   ///< 64-bit integer type
-    Type *f32Ty;                ///< 32-bit floating-point type
-    Type *f64Ty;                ///< 64-bit floating-point type
+    llvm::Type *f32Ty;          ///< 32-bit floating-point type
+    llvm::Type *f64Ty;          ///< 64-bit floating-point type
     llvm::IntegerType *intTy;   ///< the native integer type
-    Type *ptrTy;                ///< the opaque pointer type
-    Type *mlValueTy;            ///< the uniform ML value type, which is `ptrTy`
+    llvm::Type *ptrTy;          ///< the opaque pointer type
+    llvm::Type *mlValueTy;      ///< the uniform ML value type, which is `ptrTy`
     /// @}
 
     /// return the integer type of the specified bit size
@@ -222,14 +221,14 @@ class Context : public llvm::LLVMContext {
     }
 
     /// return the floating-point type of the specified bit size
-    Type *fType (int sz) const
+    llvm::Type *fType (int sz) const
     {
         if (sz == 64) return this->f64Ty;
         else return this->f32Ty;
     }
 
     /// ensure that a value has the opaque pointer type
-    Value *asPtr (Value *v)
+    llvm::Value *asPtr (llvm::Value *v)
     {
         auto ty = v->getType();
         if (! ty->isPointerTy()) {
@@ -247,11 +246,11 @@ class Context : public llvm::LLVMContext {
     }
 
     /// ensure that a value has the `mlValue` type
-    Value *asMLValue (Value *v) { return asPtr(v); }
+    llvm::Value *asMLValue (llvm::Value *v) { return asPtr(v); }
 
     /// ensure that a value is a machine-sized int type (assume that it is
     /// either a intTy or mlValueTy value)
-    Value *asInt (Value *v)
+    llvm::Value *asInt (llvm::Value *v)
     {
         if (v->getType()->isPointerTy()) {
             return this->_builder.CreatePtrToInt(v, this->intTy);
@@ -263,7 +262,7 @@ class Context : public llvm::LLVMContext {
     /// helper function to ensure that arguments to arithmetic operations
     /// have an LLVM integer type, since we use i64* (or i32*) as the type
     /// of ML values
-    Value *asInt (unsigned sz, Value *v)
+    llvm::Value *asInt (unsigned sz, llvm::Value *v)
     {
         if (v->getType() == this->mlValueTy) {
             return this->_builder.CreatePtrToInt(v, this->iType(sz));
@@ -274,10 +273,10 @@ class Context : public llvm::LLVMContext {
 
     /// cast an argument type to match the expected target type.  We assume that the
     /// types are _not_ equal!
-    Value *castTy (Type *srcTy, Type *tgtTy, Value *v);
+    llvm::Value *castTy (llvm::Type *srcTy, llvm::Type *tgtTy, llvm::Value *v);
 
-    /// SML unit value with ML Value type
-    Value *unitValue ()
+    /// SML unit value with ML llvm::Value type
+    llvm::Value *unitValue ()
     {
         return this->_builder.CreateIntToPtr(
             llvm::ConstantInt::getSigned (this->intTy, 1),
@@ -342,7 +341,7 @@ class Context : public llvm::LLVMContext {
     llvm::Constant *blockDiff (llvm::BasicBlock *bb);
 
     /// evaluate a LABEL (which maps to the given function) to an absolute address
-    Value *evalLabel (llvm::Function *fn);
+    llvm::Value *evalLabel (llvm::Function *fn);
 
     /// insert a binding into the label-to-fragment map
     void insertFrag (LambdaVar::lvar lab, CFG::frag *frag)
@@ -363,16 +362,16 @@ class Context : public llvm::LLVMContext {
     }
 
     /// insert a binding into the lvar-to-value map
-    void insertVal (LambdaVar::lvar lv, Value *v)
+    void insertVal (LambdaVar::lvar lv, llvm::Value *v)
     {
-        std::pair<LambdaVar::lvar,Value *> pair(lv, v);
+        std::pair<LambdaVar::lvar,llvm::Value *> pair(lv, v);
         this->_vMap.insert (pair);
     }
 
     /// lookup a binding in the lvar-to-value map
-    Value *lookupVal (LambdaVar::lvar lv)
+    llvm::Value *lookupVal (LambdaVar::lvar lv)
     {
-        lvar_map_t<Value>::const_iterator got = this->_vMap.find(lv);
+        lvar_map_t<llvm::Value>::const_iterator got = this->_vMap.find(lv);
         if (got == this->_vMap.end()) {
             return nullptr;
         } else {
@@ -408,7 +407,7 @@ class Context : public llvm::LLVMContext {
     }
 
     /// get the current value of the base pointer as an integer value
-    Value *basePtr () const
+    llvm::Value *basePtr () const
     {
         assert ((this->_regState.getBasePtr() != nullptr)
             && "no base pointer for current cluster");
@@ -417,11 +416,11 @@ class Context : public llvm::LLVMContext {
 
     /// utility function for allocating a record of ML values (pointers or
     /// tagged ints).
-    Value *allocRecord (Value *desc, Args_t const & args);
+    llvm::Value *allocRecord (llvm::Value *desc, Args_t const & args);
 
     /// utility function for allocating a record of ML values (pointers or
     /// tagged ints), where the descriptor is a known constant value.
-    Value *allocRecord (uint64_t desc, Args_t const & args)
+    llvm::Value *allocRecord (uint64_t desc, Args_t const & args)
     {
         return allocRecord (this->asMLValue(this->uConst(desc)), args);
     }
@@ -440,7 +439,7 @@ class Context : public llvm::LLVMContext {
     llvm::MDNode *overflowWeights ();
 
     /// return an address in the stack with the given `ptrTy`.
-    Value *stkAddr (Type *ptrTy, int offset)
+    llvm::Value *stkAddr (llvm::Type *ptrTy, int offset)
     {
         if (this->_readReg == nullptr) {
             this->_initSPAccess();
@@ -553,88 +552,88 @@ class Context : public llvm::LLVMContext {
   /***** shorthand for LLVM integer instructions (with argument coercions) *****/
 /* FIXME: Note that for now, we assume that all arithmetic is in the native integer size! */
     /// @{
-    Value *createAdd (Value *a, Value *b)
+    llvm::Value *createAdd (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateAdd (this->asInt(a), this->asInt(b));
     }
-    Value *createAnd (Value *a, Value *b)
+    llvm::Value *createAnd (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateAnd (this->asInt(a), this->asInt(b));
     }
-    Value *createAShr (Value *a, Value *b)
+    llvm::Value *createAShr (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateAShr (this->asInt(a), this->asInt(b));
     }
-    Value *createICmp (llvm::CmpInst::Predicate cmp, Value *a, Value *b)
+    llvm::Value *createICmp (llvm::CmpInst::Predicate cmp, llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateICmp (cmp, this->asInt(a), this->asInt(b));
     }
-    Value *createICmpEQ (Value *a, Value *b)
+    llvm::Value *createICmpEQ (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateICmpEQ (this->asInt(a), this->asInt(b));
     }
-    Value *createICmpNE (Value *a, Value *b)
+    llvm::Value *createICmpNE (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateICmpNE (this->asInt(a), this->asInt(b));
     }
-    Value *createICmpSLT (Value *a, Value *b)
+    llvm::Value *createICmpSLT (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateICmpSLT (this->asInt(a), this->asInt(b));
     }
-    Value *createLShr (Value *a, Value *b)
+    llvm::Value *createLShr (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateLShr (this->asInt(a), this->asInt(b));
     }
-    Value *createMul (Value *a, Value *b)
+    llvm::Value *createMul (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateMul (this->asInt(a), this->asInt(b));
     }
-    Value *createOr (Value *a, Value *b)
+    llvm::Value *createOr (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateOr (this->asInt(a), this->asInt(b));
     }
-    Value *createSDiv (Value *a, Value *b)
+    llvm::Value *createSDiv (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateSDiv (this->asInt(a), this->asInt(b));
     }
-    Value *createShl (Value *a, Value *b)
+    llvm::Value *createShl (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateShl (this->asInt(a), this->asInt(b));
     }
-    Value *createSIToFP (Value *v, Type *ty)
+    llvm::Value *createSIToFP (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreateSIToFP (v, ty);
     }
-    Value *createSRem (Value *a, Value *b)
+    llvm::Value *createSRem (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateSRem (this->asInt(a), this->asInt(b));
     }
-    Value *createSub (Value *a, Value *b)
+    llvm::Value *createSub (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateSub (this->asInt(a), this->asInt(b));
     }
-    Value *createUDiv (Value *a, Value *b)
+    llvm::Value *createUDiv (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateUDiv (this->asInt(a), this->asInt(b));
     }
-    Value *createURem (Value *a, Value *b)
+    llvm::Value *createURem (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateURem (this->asInt(a), this->asInt(b));
     }
-    Value *createXor (Value *a, Value *b)
+    llvm::Value *createXor (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateXor (this->asInt(a), this->asInt(b));
     }
 
-    Value *createSExt (Value *v, Type *ty)
+    llvm::Value *createSExt (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreateSExt (v, ty);
     }
-    Value *createZExt (Value *v, Type *ty)
+    llvm::Value *createZExt (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreateZExt (v, ty);
     }
-    Value *createTrunc (Value *v, Type *ty)
+    llvm::Value *createTrunc (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreateTrunc(v, ty);
     }
@@ -642,40 +641,58 @@ class Context : public llvm::LLVMContext {
 
   /***** shorthand for LLVM floating-point instructions *****/
     /// @{
-    Value *createFAdd (Value *a, Value *b) { return this->_builder.CreateFAdd (a, b); }
-    Value *createFCmp (llvm::CmpInst::Predicate cmp, Value *a, Value *b)
+    llvm::Value *createFAdd (llvm::Value *a, llvm::Value *b)
+    {
+        return this->_builder.CreateFAdd (a, b);
+    }
+    llvm::Value *createFCmp (llvm::CmpInst::Predicate cmp, llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateFCmp (cmp, a, b);
     }
-    Value *createFDiv (Value *a, Value *b) { return this->_builder.CreateFDiv (a, b); }
-    Value *createFMul (Value *a, Value *b) { return this->_builder.CreateFMul (a, b); }
-    Value *createFNeg (Value *v) { return this->_builder.CreateFNeg (v); }
-    Value *createFPToSI (Value *v, Type *ty) { return this->_builder.CreateFPToSI (v, ty); }
-    Value *createFSub (Value *a, Value *b) { return this->_builder.CreateFSub (a, b); }
+    llvm::Value *createFDiv (llvm::Value *a, llvm::Value *b)
+    {
+        return this->_builder.CreateFDiv (a, b);
+    }
+    llvm::Value *createFMul (llvm::Value *a, llvm::Value *b)
+    {
+        return this->_builder.CreateFMul (a, b);
+    }
+    llvm::Value *createFNeg (llvm::Value *v)
+    {
+        return this->_builder.CreateFNeg (v);
+    }
+    llvm::Value *createFPToSI (llvm::Value *v, llvm::Type *ty)
+    {
+        return this->_builder.CreateFPToSI (v, ty);
+    }
+    llvm::Value *createFSub (llvm::Value *a, llvm::Value *b)
+    {
+        return this->_builder.CreateFSub (a, b);
+    }
     /// @}
 
   /***** shorthand for load/store instructions *****/
     /// @{
-    Value *createLoad (Type *ty, Value *adr, unsigned align)
+    llvm::Value *createLoad (llvm::Type *ty, llvm::Value *adr, unsigned align)
     {
       // NOTE: our loads are always aligned to the ABI alignment requirement
         return this->_builder.CreateAlignedLoad (ty, adr, llvm::MaybeAlign(align));
     }
-    Value *createLoad (Type *ty, Value *adr)
+    llvm::Value *createLoad (llvm::Type *ty, llvm::Value *adr)
     {
       // NOTE: our loads are always aligned to the ABI alignment requirement
         return this->_builder.CreateAlignedLoad (ty, adr, llvm::MaybeAlign(0));
     }
 
     /// create a store of a ML value
-    void createStoreML (Value *v, Value *adr)
+    void createStoreML (llvm::Value *v, llvm::Value *adr)
     {
         this->_builder.CreateAlignedStore (
             this->asMLValue(v),
             this->asPtr(adr),
             llvm::MaybeAlign(this->_wordSzB));
     }
-    void createStore (Value *v, Value *adr, unsigned align)
+    void createStore (llvm::Value *v, llvm::Value *adr, unsigned align)
     {
         this->_builder.CreateAlignedStore (
             v,
@@ -686,19 +703,19 @@ class Context : public llvm::LLVMContext {
 
   /***** shorthand for type cast instructions *****/
     /// @{
-    Value *createIntToPtr (Value *v)
+    llvm::Value *createIntToPtr (llvm::Value *v)
     {
         return this->_builder.CreateIntToPtr (v, this->ptrTy);
     }
-    Value *createPtrToInt (Value *v)
+    llvm::Value *createPtrToInt (llvm::Value *v)
     {
         return this->_builder.CreatePtrToInt(v, this->intTy);
     }
-    Value *createBitCast (Value *v, Type *ty)
+    llvm::Value *createBitCast (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreateBitCast (v, ty);
     }
-    Value *createPointerCast (Value *v, Type *ty)
+    llvm::Value *createPointerCast (llvm::Value *v, llvm::Type *ty)
     {
         return this->_builder.CreatePointerCast (v, ty);
     }
@@ -707,7 +724,7 @@ class Context : public llvm::LLVMContext {
   /***** shorthand for other instructions *****/
 
     /// create a tail JWA function call
-    llvm::CallInst *createJWACall (llvm::FunctionType *fnTy, Value *fn, Args_t const &args)
+    llvm::CallInst *createJWACall (llvm::FunctionType *fnTy, llvm::Value *fn, Args_t const &args)
     {
         llvm::CallInst *call = this->_builder.CreateCall(fnTy, fn, args);
         call->setCallingConv (llvm::CallingConv::JWA);
@@ -715,7 +732,7 @@ class Context : public llvm::LLVMContext {
         return call;
     }
 
-    Value *createExtractValue (Value *v, int i)
+    llvm::Value *createExtractValue (llvm::Value *v, int i)
     {
         return this->_builder.CreateExtractValue (v, i);
     }
@@ -725,26 +742,26 @@ class Context : public llvm::LLVMContext {
     }
 
     /// create a GEP instruction for accessing a ML value
-    Value *createGEP (Value *base, Value *idx)
+    llvm::Value *createGEP (llvm::Value *base, llvm::Value *idx)
     {
         return this->_builder.CreateInBoundsGEP (this->mlValueTy, base, idx);
     }
 
     /// create a GEP instruction for accessing a value of the specified type
-    Value *createGEP (Type *elemTy, Value *base, Value *idx)
+    llvm::Value *createGEP (llvm::Type *elemTy, llvm::Value *base, llvm::Value *idx)
     {
         return this->_builder.CreateInBoundsGEP (elemTy, this->asPtr(base), idx);
     }
 
     /// create a GEP instruction for accessing a ML value using a constant index
-    Value *createGEP (Value *base, int32_t idx)
+    llvm::Value *createGEP (llvm::Value *base, int32_t idx)
     {
         return this->_builder.CreateInBoundsGEP (this->mlValueTy, base, this->i32Const(idx));
     }
 
     /// create a GEP instruction for accessing a value of the specified type
     /// using a constant index
-    Value *createGEP (Type *elemTy, Value *base, int32_t idx)
+    llvm::Value *createGEP (llvm::Type *elemTy, llvm::Value *base, int32_t idx)
     {
         return this->_builder.CreateInBoundsGEP (
             elemTy,
@@ -754,7 +771,7 @@ class Context : public llvm::LLVMContext {
 
     /// create an unamed global alias
     llvm::Constant *createGlobalAlias (
-        Type *ty,
+        llvm::Type *ty,
         llvm::Twine const &name,
         llvm::Constant *v);
 
@@ -792,7 +809,7 @@ class Context : public llvm::LLVMContext {
     CFG::cluster                *_curCluster;   // current CFG cluster
     lvar_map_t<CFG::cluster>    _clusterMap;    // per-module mapping from labels to clusters
     lvar_map_t<CFG::frag>       _fragMap;       // pre-cluster map from labels to fragments
-    lvar_map_t<Value>           _vMap;          // per-fragment map from lvars to values
+    lvar_map_t<llvm::Value>     _vMap;          // per-fragment map from lvars to values
 
     // more cached types (these are internal to the Context class)
     llvm::FunctionType *_gcFnTy;                // type of call-gc function
@@ -830,13 +847,13 @@ class Context : public llvm::LLVMContext {
     /// helper function for getting an intrinsic when it has not yet
     /// been loaded for the current module.
     //
-    llvm::Function *_getIntrinsic (llvm::Intrinsic::ID id, Type *ty) const;
+    llvm::Function *_getIntrinsic (llvm::Intrinsic::ID id, llvm::Type *ty) const;
 
     /// initialize the metadata needed to support reading the stack pointer
     void _initSPAccess ();
 
     /// utility function for loading a value from the stack
-    Value *_loadFromStack (int offset, std::string_view name)
+    llvm::Value *_loadFromStack (int offset, std::string_view name)
     {
         return this->build().CreateAlignedLoad (
             this->mlValueTy,
@@ -846,10 +863,10 @@ class Context : public llvm::LLVMContext {
     }
 
     /// function for loading a special register from memory
-    Value *_loadMemReg (CMRegId r);
+    llvm::Value *_loadMemReg (CMRegId r);
 
     /// function for setting a special memory register
-    void _storeMemReg (CMRegId r, Value *v);
+    void _storeMemReg (CMRegId r, llvm::Value *v);
 
     /// information about JWA arguments
     struct arg_info {
@@ -867,7 +884,7 @@ class Context : public llvm::LLVMContext {
 
     /// add the types for the "extra" parameters (plus optional base pointer) to
     /// a vector of types.
-    void _addExtraParamTys (std::vector<Type *> &tys, arg_info const &info) const;
+    void _addExtraParamTys (Types_t &tys, arg_info const &info) const;
 
     /// add the "extra" arguments (plus optional base pointer) to an argument vector
     void _addExtraArgs (Args_t &args, arg_info const &info) const;

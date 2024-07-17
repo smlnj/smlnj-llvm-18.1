@@ -73,8 +73,8 @@ Context::Context (TargetInfo const *target)
     this->i16Ty = llvm::IntegerType::get (*this, 16);
     this->i32Ty = llvm::IntegerType::get (*this, 32);
     this->i64Ty = llvm::IntegerType::get (*this, 64);
-    this->f32Ty = Type::getPrimitiveType (*this, Type::FloatTyID);
-    this->f64Ty = Type::getPrimitiveType (*this, Type::DoubleTyID);
+    this->f32Ty = llvm::Type::getPrimitiveType (*this, llvm::Type::FloatTyID);
+    this->f64Ty = llvm::Type::getPrimitiveType (*this, llvm::Type::DoubleTyID);
 
     if (this->_target->wordSz == 32) {
 	this->intTy = this->i32Ty;
@@ -87,12 +87,12 @@ Context::Context (TargetInfo const *target)
 
     this->ptrTy = llvm::PointerType::getUnqual(*this);
     this->mlValueTy = this->ptrTy;
-    this->voidTy = Type::getVoidTy (*this);
+    this->voidTy = llvm::Type::getVoidTy (*this);
 
   // "call-gc" types
     {
 	int n = target->numCalleeSaves + 4;
-	std::vector<Type *> gcTys = this->createParamTys (frag_kind::STD_FUN, n);
+	Types_t gcTys = this->createParamTys (frag_kind::STD_FUN, n);
 	for (int i = 0;  i < n;  ++i) {
 	    gcTys.push_back (this->mlValueTy);
 	}
@@ -107,7 +107,7 @@ Context::Context (TargetInfo const *target)
       // necessary to ensure that the correct values are in place at the point
       // where the Overflow exception will be raised.
       //
-	std::vector<Type *> tys;
+	Types_t tys;
 	int nArgs = this->_regInfo.numMachineRegs();
 	tys.reserve (nArgs);
 	for (int i = 0;  i < nArgs;  ++i) {
@@ -246,9 +246,9 @@ Context::arg_info Context::_getArgInfo (frag_kind kind) const
 
 }
 
-llvm::FunctionType *Context::createFnTy (frag_kind kind, std::vector<Type *> const & tys) const
+llvm::FunctionType *Context::createFnTy (frag_kind kind, Types_t const & tys) const
 {
-    std::vector<Type *> allParams = this->createParamTys (kind, tys.size());
+    Types_t allParams = this->createParamTys (kind, tys.size());
 
   // add the types from the function's formal parameters
     for (auto ty : tys) {
@@ -257,12 +257,12 @@ llvm::FunctionType *Context::createFnTy (frag_kind kind, std::vector<Type *> con
 
     return llvm::FunctionType::get (
 	this->voidTy,
-	llvm::ArrayRef<Type *>(allParams),
+	llvm::ArrayRef<llvm::Type *>(allParams),
 	false);
 
 }
 
-void Context::_addExtraParamTys (std::vector<Type *> &tys, arg_info const &info) const
+void Context::_addExtraParamTys (Types_t &tys, arg_info const &info) const
 {
   // the parameter list starts with the special registers (i.e., alloc ptr, ...),
   //
@@ -276,9 +276,9 @@ void Context::_addExtraParamTys (std::vector<Type *> &tys, arg_info const &info)
 
 }
 
-std::vector<Type *> Context::createParamTys (frag_kind kind, int n) const
+Types_t Context::createParamTys (frag_kind kind, int n) const
 {
-    std::vector<Type *> tys;
+    Types_t tys;
     arg_info info = this->_getArgInfo (kind);
 
     tys.reserve (info.numArgs(n));
@@ -421,7 +421,7 @@ void Context::setupFragEntry (CFG::frag *frag, std::vector<llvm::PHINode *> &phi
 } // Context::setupFragEntry
 
 llvm::Constant *Context::createGlobalAlias (
-    Type *ty,
+    llvm::Type *ty,
     llvm::Twine const &name,
     llvm::Constant *v)
 {
@@ -464,7 +464,7 @@ llvm::Constant *Context::blockDiff (llvm::BasicBlock *bb)
 
 }
 
-Value *Context::evalLabel (llvm::Function *fn)
+llvm::Value *Context::evalLabel (llvm::Function *fn)
 {
     if (this->_target->hasPCRel) {
 #ifdef XXX
@@ -484,7 +484,7 @@ Value *Context::evalLabel (llvm::Function *fn)
 		this->mlValueTy));
     }
     else {
-	Value *basePtr = this->_regState.getBasePtr();
+	llvm::Value *basePtr = this->_regState.getBasePtr();
 
 	assert ((basePtr != nullptr) && "basePtr is not defined");
 
@@ -511,7 +511,7 @@ void Context::_initSPAccess ()
 }
 
 // private function for loading a special register from memory
-Value *Context::_loadMemReg (CMRegId r)
+llvm::Value *Context::_loadMemReg (CMRegId r)
 {
     auto info = this->_regInfo.info(r);
     return this->_loadFromStack (info->offset(), info->name());
@@ -519,7 +519,7 @@ Value *Context::_loadMemReg (CMRegId r)
 } // Context::_loadMemReg
 
 // private function for setting a special memory register
-void Context::_storeMemReg (CMRegId r, Value *v)
+void Context::_storeMemReg (CMRegId r, llvm::Value *v)
 {
     auto info = this->_regInfo.info(r);
     auto stkAddr = this->stkAddr (v->getType()->getPointerTo(), info->offset());
@@ -533,12 +533,12 @@ void Context::_storeMemReg (CMRegId r, Value *v)
 // utility function for allocating a record of ML values (pointers or
 // tagged ints).
 //
-Value *Context::allocRecord (Value *desc, Args_t const & args)
+llvm::Value *Context::allocRecord (llvm::Value *desc, Args_t const & args)
 {
     assert (desc->getType() == this->mlValueTy && "descriptor should be ML Value");
 
     int len = args.size();
-    Value *allocPtr = this->mlReg (CMRegId::ALLOC_PTR);
+    llvm::Value *allocPtr = this->mlReg (CMRegId::ALLOC_PTR);
 
   // write object descriptor
     this->build().CreateAlignedStore (desc, allocPtr, llvm::MaybeAlign (this->_wordSzB));
@@ -552,7 +552,7 @@ Value *Context::allocRecord (Value *desc, Args_t const & args)
     }
 
   // compute the object's address and cast it to an ML value
-    Value *obj = this->asMLValue (this->createGEP (allocPtr, 1));
+    llvm::Value *obj = this->asMLValue (this->createGEP (allocPtr, 1));
 
   // bump the allocation pointer
     this->setMLReg (CMRegId::ALLOC_PTR, this->createGEP (allocPtr, len + 1));
@@ -568,7 +568,7 @@ void Context::callGC (
 	&& "arity mismatch in GC call");
 
   // get the address of the "call-gc" entry
-    Value *callGCFn = this->_loadFromStack (this->_target->callGCOffset, "callGC");
+    llvm::Value *callGCFn = this->_loadFromStack (this->_target->callGCOffset, "callGC");
 
   // call the garbage collector.  The return type of the GC is a struct
   // that contains the post-GC values of the argument registers
@@ -612,7 +612,7 @@ llvm::MDNode *Context::branchProb (int prob)
 
 // generate a type cast for an actual to formal transfer.
 //
-Value *Context::castTy (Type *srcTy, Type *tgtTy, Value *v)
+llvm::Value *Context::castTy (llvm::Type *srcTy, llvm::Type *tgtTy, llvm::Value *v)
 {
     if (tgtTy->isPointerTy()) {
 	if (srcTy->isPointerTy()) {
@@ -631,10 +631,10 @@ Value *Context::castTy (Type *srcTy, Type *tgtTy, Value *v)
 
 } // Context::castTy
 
-llvm::Function *Context::_getIntrinsic (llvm::Intrinsic::ID id, Type *ty) const
+llvm::Function *Context::_getIntrinsic (llvm::Intrinsic::ID id, llvm::Type *ty) const
 {
     return llvm::Intrinsic::getDeclaration (
-	this->_module, id, llvm::ArrayRef<Type *>(ty));
+	this->_module, id, llvm::ArrayRef<llvm::Type *>(ty));
 }
 
 std::unique_ptr<ObjectFile> Context::compile () const

@@ -16,40 +16,40 @@ namespace CFG {
 
   /***** code generation for the `ty` type *****/
 
-    Type *LABt::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Type *LABt::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->mlValueTy;
 
     } // LABt::codegen
 
-    Type *PTRt::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Type *PTRt::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->mlValueTy;
 
     } // PTRt::codegen
 
-    Type *TAGt::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Type *TAGt::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->intTy;
 
     } // TAGt::codegen
 
-    Type *NUMt::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Type *NUMt::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->iType (this->_v_sz);
 
     } // NUMt::codegen
 
-    Type *FLTt::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Type *FLTt::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->fType (this->_v_sz);
 
     } // FLTt::codegen
 
   // code generation for a vector of types
-    static std::vector<Type *> genTypes (smlnj::cfgcg::Context *cxt, std::vector<ty *> const &tys)
+    static Types_t genTypes (smlnj::cfgcg::Context *cxt, std::vector<ty *> const &tys)
     {
-	std::vector<Type *> llvmTys;
+	Types_t llvmTys;
 	llvmTys.reserve(tys.size());
 	for (auto ty : tys) {
 	    llvmTys.push_back (ty->codegen (cxt));
@@ -59,9 +59,9 @@ namespace CFG {
 
   /***** code generation for the `exp` type *****/
 
-    Value *VAR::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *VAR::codegen (smlnj::cfgcg::Context *cxt)
     {
-	Value *v = cxt->lookupVal (this->_v_name);
+	llvm::Value *v = cxt->lookupVal (this->_v_name);
 #ifdef _DEBUG
 	if (v == nullptr) {
 	    llvm::dbgs() << "VAR: " << this->_v_name << " is unbound\n";
@@ -72,7 +72,7 @@ namespace CFG {
 
     } // VAR::codegen
 
-    Value *LABEL::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *LABEL::codegen (smlnj::cfgcg::Context *cxt)
     {
 	cluster *cluster = cxt->lookupCluster (this->_v_name);
 
@@ -82,7 +82,7 @@ namespace CFG {
 
     } // LABEL::codegen
 
-    Value *NUM::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *NUM::codegen (smlnj::cfgcg::Context *cxt)
     {
 	if (this->get_iv().getSign() < 0) {
 	    return cxt->iConst (this->get_sz(), this->get_iv().toInt64());
@@ -92,7 +92,7 @@ namespace CFG {
 
     } // NUM::codegen
 
-    Value *LOOKER::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *LOOKER::codegen (smlnj::cfgcg::Context *cxt)
     {
 	Args_t args;
 	for (auto it = this->_v_args.begin(); it != this->_v_args.end(); ++it) {
@@ -102,7 +102,7 @@ namespace CFG {
 
     } // LOOKER::codegen
 
-    Value *PURE::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *PURE::codegen (smlnj::cfgcg::Context *cxt)
     {
 	Args_t args;
 	for (auto it = this->_v_args.begin(); it != this->_v_args.end(); ++it) {
@@ -112,16 +112,16 @@ namespace CFG {
 
     } // PURE::codegen
 
-    Value *SELECT::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *SELECT::codegen (smlnj::cfgcg::Context *cxt)
     {
-	Value *adr = cxt->createGEP (
+	llvm::Value *adr = cxt->createGEP (
 	    cxt->asPtr(this->_v_arg->codegen(cxt)),
 	    static_cast<int32_t>(this->_v_idx));
 	return cxt->createLoad (cxt->mlValueTy, adr);
 
     } // SELECT::codegen
 
-    Value *OFFSET::codegen (smlnj::cfgcg::Context *cxt)
+    llvm::Value *OFFSET::codegen (smlnj::cfgcg::Context *cxt)
     {
 	return cxt->createGEP (
 	    cxt->asPtr(this->_v_arg->codegen(cxt)),
@@ -180,7 +180,7 @@ namespace CFG {
     {
 	frag_kind fk = frag_kind::STD_FUN;
 	llvm::FunctionType *fnTy;
-	Value *fn;
+	llvm::Value *fn;
 	LABEL *lab = (this->_v0->isLABEL() ? reinterpret_cast<LABEL *>(this->_v0) : nullptr);
 	if (lab == nullptr) {
 	    fnTy = cxt->createFnTy (fk, genTypes (cxt, this->_v2));
@@ -207,7 +207,7 @@ namespace CFG {
     void THROW::codegen (smlnj::cfgcg::Context *cxt)
     {
 	llvm::FunctionType *fnTy;
-	Value *fn;
+	llvm::Value *fn;
 	LABEL *lab = (this->_v0->isLABEL() ? reinterpret_cast<LABEL *>(this->_v0) : nullptr);
 	if (lab == nullptr) {
 	    fnTy = cxt->createFnTy (frag_kind::STD_CONT, genTypes (cxt, this->_v2));
@@ -248,8 +248,8 @@ namespace CFG {
 	for (int i = 0;  i < args.size();  ++i) {
 	  // make sure that the type match!
 	    assert (args[i]);
-	    Type *srcTy = args[i]->getType();
-	    Type *tgtTy = dstFrag->paramTy(i);
+	    llvm::Type *srcTy = args[i]->getType();
+	    llvm::Type *tgtTy = dstFrag->paramTy(i);
 	    if (srcTy != tgtTy) {
 		dstFrag->addIncoming (i, cxt->castTy(srcTy, tgtTy, args[i]), srcBB);
 	    } else {
@@ -267,7 +267,7 @@ namespace CFG {
     void SWITCH::codegen (smlnj::cfgcg::Context *cxt)
     {
       // evaluate the argument and truncate to 32 bits
-	Value *arg = cxt->createTrunc(cxt->asInt(this->_v0->codegen(cxt)), cxt->i32Ty);
+	llvm::Value *arg = cxt->createTrunc(cxt->asInt(this->_v0->codegen(cxt)), cxt->i32Ty);
 
       // the number of non-default cases
 	int nCases = this->_v1.size();
@@ -308,7 +308,7 @@ namespace CFG {
 	for (auto it = this->_v1.begin(); it != this->_v1.end(); ++it) {
 	    args.push_back ((*it)->codegen (cxt));
 	}
-	Value *cond = this->_v0->codegen(cxt, args);
+	llvm::Value *cond = this->_v0->codegen(cxt, args);
 
       // generate the conditional branch
 	if (this->_v2 == 0) {
