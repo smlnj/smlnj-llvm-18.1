@@ -68,7 +68,7 @@ else() # NOT PROJECT_IS_TOP_LEVEL
   # when we are building the code-generator library as a sub-project, we need
   # to specify where to find the SML/NJ config.h file.
   #
-  include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/src/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/src/include)
 
 endif()
 
