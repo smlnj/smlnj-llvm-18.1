@@ -18,8 +18,6 @@
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include <cstdint>
 
-#include <iostream>  // for debugging
-
 namespace smlnj {
 namespace cfgcg {
 
@@ -37,9 +35,10 @@ inline uintptr_t alignBy (uintptr_t n, llvm::Align align)
 class MemManager : public llvm::RTDyldMemoryManager
 {
 public:
-    // constructor
+    /// constructor
     MemManager () : _base(nullptr), _code(), _roData() { }
 
+    /// destructor
     virtual ~MemManager () override
     {
         if (this->_base != nullptr) {
@@ -74,7 +73,7 @@ public:
 
     void registerEHFrames (uint8_t *addr, uint64_t loadAddr, size_t numBytes) override;
 
-    virtual bool finalizeMemory (std::string* ErrMsg = nullptr) override
+    virtual bool finalizeMemory (std::string * ErrMsg = nullptr) override
     {
         // nothing to do here, since we are not going to execute the code
         return true;
@@ -97,11 +96,12 @@ private:
     /// information about an in-memory section from the object file
     struct _Section {
         uint8_t *_data;         ///< base address of section
-        size_t _szb;            ///< current size of code/data in section
+        size_t _szb;            ///< current size of code/data in section; this
+                                ///  represents the sum of allocations in the section
         size_t _paddedSzb;      ///< padded size of the section
 
         /// constructor
-        _Section () : _data(nullptr), _szb(0) { }
+        _Section () : _data(nullptr), _szb(0), _paddedSzb(0) { }
 
         /// set the padded size of the section
         void setSize (size_t szb, llvm::Align align)
@@ -116,7 +116,9 @@ private:
             assert (alignBy(this->_szb, align) + alignBy(nb, align) <= this->_paddedSzb
                 && "insufficient space for allocation");
 
+            // the base for this allocation
             uint8_t *ptr = this->_data + alignBy(this->_szb, align);
+            // the new size
             this->_szb = (ptr - this->_data) + alignBy(nb, align);
 llvm::dbgs() << "## alloc " << nb << " bytes at " << (void *)ptr << "\n";
             return ptr;
@@ -156,7 +158,7 @@ llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
     this->_rwData.setSize(rwDataSzb, rwDataAlign);
 
     /// allocate the memory for the in-memory sections
-    this->_base = new uint8_t (this->size());
+    this->_base = new uint8_t [this->size()];
 
     /// assign base adresses for the sections
     this->_code._data = this->_base;
@@ -241,8 +243,6 @@ public:
     {
         return llvm::JITSymbolResolver::LookupSet(); /* return empty set */
     }
-
-private:
 
 }; /* class SymbolResolver */
 
