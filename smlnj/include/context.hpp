@@ -275,7 +275,7 @@ class Context : public llvm::LLVMContext {
     /// types are _not_ equal!
     llvm::Value *castTy (llvm::Type *srcTy, llvm::Type *tgtTy, llvm::Value *v);
 
-    /// SML unit value with ML llvm::Value type
+    /// SML unit value with ML value type
     llvm::Value *unitValue ()
     {
         return this->_builder.CreateIntToPtr(
