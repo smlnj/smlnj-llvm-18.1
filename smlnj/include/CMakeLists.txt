@@ -6,11 +6,11 @@
 
 set(SRCS
   cfg.hpp
+  cm-registers.hpp
   context.hpp
   lambda-var.hpp
   object-file.hpp
   objfile-stream.hpp
-  cm-registers.hpp
   target-info.hpp)
 
 install(DIRECTORY asdl TYPE INCLUDE)
