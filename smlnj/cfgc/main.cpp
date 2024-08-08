@@ -87,12 +87,12 @@ int main (int argc, char **argv)
 		out = Output::AsmFile;
 	    } else if (args[i] == "-c") {
 		out = Output::Memory;
-	    } else if (args[i] == "--emit-llvm") {
+	    } else if (args[i] == "-emit-llvm") {
 		emitLLVM = true;
-	    } else if (args[i] == "--bits") {
+	    } else if (args[i] == "-bits") {
 		dumpBits = true;
 		out = Output::Memory;
-	    } else if (args[i] == "--target") {
+	    } else if (args[i] == "-target") {
 		i++;
 		if (i < args.size()) {
 		    targetArch = args[i];
