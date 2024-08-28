@@ -107,6 +107,10 @@ private:
         void setSize (size_t szb, llvm::Align align)
         {
             this->_paddedSzb = alignBy(szb, align);
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# setSize: szb = " << szb << "; aligned szb = "
+<< this->_paddedSzb << "\n";
+#endif
         }
 
         /// allocate memory in the section
@@ -118,9 +122,17 @@ private:
 
             // the base for this allocation
             uint8_t *ptr = this->_data + alignBy(this->_szb, align);
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# alloc: nb = " << nb << "; align = " << align
+<< "; current szb = " << this->_szb << "; base = " << this->_data
+<< "; current top = " << (void *)ptr << "\n";
+#endif
             // the new size
             this->_szb = (ptr - this->_data) + alignBy(nb, align);
-llvm::dbgs() << "## alloc " << nb << " bytes at " << (void *)ptr << "\n";
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# alloc: new size = " << this->_szb
+<< "; new top = " << this->_data + this->_szb << "\n";
+#endif
             return ptr;
         }
     };
@@ -140,10 +152,10 @@ void MemManager::reserveAllocationSpace (
     uintptr_t rwDataSzb,
     llvm::Align rwDataAlign)
 {
-/*DEBUG*/
-llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
-<< ", rwData = " << rwDataSzb << "\n";
-/*DEBUG*/
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "; roData = " << roDataSzb
+<< "; rwData = " << rwDataSzb << "\n";
+#endif
 
 //    assert (rwDataSzb == 0 && "unexpected non-empty RW data");
     assert (this->_base == nullptr && "memory already allocated");
@@ -159,6 +171,13 @@ llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << ", roData = " << roDataSzb
 
     /// allocate the memory for the in-memory sections
     this->_base = new uint8_t [this->size()];
+#ifdef DEBUG_CODEGEN
+/*DEBUG*/
+llvm::dbgs() << "# reserve: base = " << this->_base
+<< "; size = " << (int)(this->size())
+<< "; top = " << (void *)(this->_base + this->size()) << "\n";
+#endif
+/*DEBUG*/
 
     /// assign base adresses for the sections
     this->_code._data = this->_base;
@@ -175,10 +194,10 @@ uint8_t *MemManager::allocateCodeSection (
 {
     assert (this->_base != nullptr && "memory has not been reserved");
 
-/*DEBUG*/
+#ifdef DEBUG_CODEGEN
 llvm::dbgs() << "# allocate code[" << name << "]: szb = " << szb
 << "; align = " << align << "\n";
-/*DEBUG*/
+#endif
 
     return this->_code.alloc(szb, align);
 
@@ -194,10 +213,10 @@ uint8_t *MemManager::allocateDataSection (
     assert (this->_base != nullptr && "memory has not been reserved");
 //    assert (readOnly && "unexpected allocation of RW data");
 
-/*DEBUG*/
+#ifdef DEBUG_CODEGEN
 llvm::dbgs() << "# allocate data[" << name << "]: szb = " << szb
 << "; align = " << align << "; ro = " << readOnly << "\n";
-/*DEBUG*/
+#endif
 
     if (readOnly) {
         return this->_roData.alloc(szb, align);
@@ -209,10 +228,10 @@ llvm::dbgs() << "# allocate data[" << name << "]: szb = " << szb
 
 void MemManager::registerEHFrames (uint8_t *addr, uint64_t loadAddr, size_t numBytes)
 {
-/*DEBUG*/
+#ifdef DEBUG_CODEGEN
 llvm::dbgs() << "# register EH frames: addr = " << (void*)addr
 << ", loadAddr = " << loadAddr << "; numBytes = " << numBytes << "\n";
-/*DEBUG*/
+#endif
 } // MemManager::registerEHFrames
 
 
@@ -262,9 +281,9 @@ ObjectFile::ObjectFile (ObjfileStream const &output)
     SymbolResolver symbolResolver;
     llvm::RuntimeDyld loader(*this->_memManager, symbolResolver);
 
-/*DEBUG*/
+#ifdef DEBUG_CODEGEN
 llvm::dbgs() << "# link object file\n";
-/*DEBUG*/
+#endif
 
     // Use the LLVM object loader to load the object.
     std::unique_ptr<llvm::RuntimeDyld::LoadedObjectInfo> loadedObject =
@@ -275,6 +294,10 @@ llvm::dbgs() << "# link object file\n";
             std::string("RuntimeDyld failed: ") + loader.getErrorString().data();
         llvm::report_fatal_error (llvm::StringRef(errMsg), false);
      }
+
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# object file linking done\n";
+#endif
 
 }
 
