@@ -1,6 +1,6 @@
 # CMake configuration for SML/NJ LLVM with JWA patches
 #
-# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
 # All rights reserved.
 #
 
