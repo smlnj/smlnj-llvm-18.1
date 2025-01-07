@@ -19,11 +19,11 @@ project(smlnj-llvm
 if (PROJECT_IS_TOP_LEVEL)
 
   # Disable builds in the source tree to prevent corruption.
-  if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
+  if ("${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "
   ERROR: builds in the source tree are not allowed.
          Create a separate directory for build files.
-  ")
+")
   endif()
 
   # check the build type
