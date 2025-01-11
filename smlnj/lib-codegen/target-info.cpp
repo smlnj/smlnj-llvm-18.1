@@ -15,35 +15,35 @@
 namespace smlnj {
 namespace cfgcg {
 
-#if defined(OPSYS_DARWIN)
+#if defined(SMLNJ_OPSYS_DARWIN)
 constexpr std::string_view kVendor = "apple";
 constexpr std::string_view kOS = "macosx";
 #define DL_MANGLE "m:o" // MachO mangling
-#elif defined(OPSYS_LINUX)
+#elif defined(SMLNJ_OPSYS_LINUX)
 constexpr std::string_view kVendor = "unknown";
 constexpr std::string_view kOS = "linux";
 #define DL_MANGLE "m:e" // ELF mangling
 #endif
 
-// make sure that the "ENABLE_xxx" symbol is defined for the host architecture */
-#if defined(ARCH_AMD64) && !defined(ENABLE_X86)
-#  define ENABLE_X86
+// make sure that the "SMLNJ_ENABLE_xxx" symbol is defined for the host architecture */
+#if defined(SMLNJ_ARCH_AMD64) && !defined(SMLNJ_ENABLE_X86)
+#  define SMLNJ_ENABLE_X86
 #endif
-#if defined(ARCH_ARM64) && !defined(ENABLE_ARM64)
-#  define ENABLE_ARM64
-#endif
-
-/* to support cross compiling, define the symbol "ENABLE_ALL" */
-#ifdef ENABLE_ALL
-#  ifndef ENABLE_ARM64
-#    define ENABLE_ARM64
-#  endif
-#  ifndef ENABLE_X86
-#    define ENABLE_X86
-#  endif
+#if defined(SMLNJ_ARCH_ARM64) && !defined(SMLNJ_ENABLE_ARM64)
+#  define SMLNJ_ENABLE_ARM64
 #endif
 
-#ifdef ENABLE_ARM64
+/* to support cross compiling, define the symbol "SMLNJ_ENABLE_ALL" */
+#ifdef SMLNJ_ENABLE_ALL
+#  ifndef SMLNJ_ENABLE_ARM64
+#    define SMLNJ_ENABLE_ARM64
+#  endif
+#  ifndef SMLNJ_ENABLE_X86
+#    define SMLNJ_ENABLE_X86
+#  endif
+#endif
+
+#ifdef SMLNJ_ENABLE_ARM64
 extern "C" {
 void LLVMInitializeAArch64TargetInfo ();
 void LLVMInitializeAArch64Target ();
@@ -73,7 +73,7 @@ static TargetInfo Arm64Info = {
     };
 #endif
 
-#ifdef ENABLE_X86
+#ifdef SMLNJ_ENABLE_X86
 extern "C" {
 void LLVMInitializeX86TargetInfo ();
 void LLVMInitializeX86Target ();
@@ -107,18 +107,18 @@ static TargetInfo X86_64Info = {
 #endif
 
 static TargetInfo const *Targets[] = {
-#if defined(ENABLE_X86)
+#if defined(SMLNJ_ENABLE_X86)
 	&X86_64Info,
 #endif
-#if defined(ENABLE_ARM64)
+#if defined(SMLNJ_ENABLE_ARM64)
 	&Arm64Info,
 #endif
     };
 
 // the target info for the native (host) architecture
-#if defined(ARCH_AMD64)
+#if defined(SMLNJ_ARCH_AMD64)
 const TargetInfo *TargetInfo::native = &X86_64Info;
-#elif defined(ARCH_ARM64)
+#elif defined(SMLNJ_ARCH_ARM64)
 const TargetInfo *TargetInfo::native = &Arm64Info;
 #else
 #  error unknown native architecture

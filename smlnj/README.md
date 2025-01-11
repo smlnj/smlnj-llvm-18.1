@@ -16,11 +16,9 @@ or loaded into the SML heap for execution.
   provide accurate information.
 * `config` -- holds configuration template for use when building as a
   top-level project
-* `heap2objfile` -- a program that converts a **SML/NJ** heap image file
-  to a host object file that can be linked with the runtime to produce a
-  standalone executable.
 * `include` -- the API for the code generator library
-* `lib` -- the implementation source for the code generator library
+* `lib-codegen` -- the source for the code generator library
+* `lib-heap2obj` -- the source for the heap-to-object-file library
 * `tests` -- test XFG pickles for the **cfgc** tool
 
 **WARNING**: the `include` and `lib` directories include the unpickler

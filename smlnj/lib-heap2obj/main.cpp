@@ -43,14 +43,14 @@ enum class Output {
 //
 inline uint64_t toSML (uint64_t n) { return n+n+1; }
 
-[[noreturn]] void usage ()
+[[noreturn]] void usage (int status = EXIT_FAILURE)
 {
     std::cerr << "usage: heap2objfile [ options ] <heap-file>\n";
     std::cerr << "options:\n";
     std::cerr << "    -o <obj-file>     -- specify the name of the output file\n";
     std::cerr << "    -S                -- emit assembly code to the output file\n";
     std::cerr << "    -emit-llvm        -- emit generated LLVM assembly to the output file\n";
-    exit (1);
+    exit (status);
 }
 
 void emitFile (
@@ -78,12 +78,19 @@ void emitFile (
 
 }
 
+/// utility function to check if the leading character of a string_view is '-'
+inline bool isCommandLineSwitch (std::string_view s)
+{
+/* TODO: customize for windows? */
+    return (! s.empty() && (s[0] == '-');
+}
+
 int main (int argc, char const **argv)
 {
     Output out = Output::ObjFile;
-    std::string_view src = "";
+    std::string_view heapFile = "";
     std::string stem;
-    std::string_view dst = "";
+    std::string_view outFile = "";
 
     // process command-line arguments
     std::vector<std::string_view> args(argv+1, argv+argc);
@@ -92,33 +99,51 @@ int main (int argc, char const **argv)
 	usage();
     }
 
-    for (int i = 0;  i < args.size();  i++) {
-	if (args[i][0] == '-') {
-	    if (args[i] == "-o") {
-		out = Output::ObjFile;
-		i++;
-		if (i < args.size()) {
-		    dst = args[i];
-		} else {
-		    usage();
-		}
-	    } else if (args[i] == "-S") {
-		out = Output::AsmFile;
-	    } else if (args[i] == "--emit-llvm") {
+    for (auto arg = args.cbegin();  arg != args.cend();  ++arg) {
+        if (isCommandLineSwitch(*arg)) {
+            arg->remove_prefix(1); // skip the '-'
+            if (arg->compare("h") == 0) {
+                usage(EXIT_SUCCESS);
+            } else if (arg->compare("o") == 0)) {
+                if (++arg != args.cend()) {
+                    if (commandLineSwitch(*arg) {
+                        usage(); // missing output file name (switch instead)
+                    }
+                    outFile = std::string(*arg);
+                } else {
+                    usage(); // missing output file
+                }
+            } else if (arg->compare("S") == 0)) {
+                out = Output::AsmFile;
+            } else if (arg->compare("emit-llvm") == 0)) {
                 out = Output::LLVMAsmFile;
-	    } else {
-		usage();
-	    }
-	}
-	else if (i == args.size()-1) { // last argument
-	    src = args[i];
-	}
+            } else {
+                usage(); // invalid option
+            }
+        } else if (heapFile.empty()) {
+            heapFile = std::string(*arg);
+        } else {
+            usage(); // multiple input files
+        }
     }
-    if (src.empty()) {
+    if (heapFile.empty()) {
         usage();
     }
 
-/* TODO: process source file name to remove suffix */
+    // process source file name to remove suffix
+    std::string baseName = smlnj::stripHeapSuffix(heapFile);
+    if (outFile.empty()) {
+        // generate the output file name by replacing the heap suffix
+        // with the output-file suffix
+        switch (outMode) {
+        case kObjFile:
+            outFile = baseName + OBJECT_FILE_EXTENSION;
+            break;
+        case kLLVM:
+            outFile = baseName + ".ll";
+            break;
+        }
+    }
 
     // load the heap-image data
     std::error_code ec;

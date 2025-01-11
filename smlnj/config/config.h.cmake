@@ -12,16 +12,21 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+/* size of SML words */
+#define SMLNJ_LOG2_WORD_SZB     3
+#define SMLNJ_WORD_SZB		(1 << SMLNJ_LOG2_WORD_SZB)
+#define SMLNJ_WORD_BITS		(8 * SMLNJ_WORD_SZB)
+
 /* Code generation targets */
-#cmakedefine ENABLE_ARM64
-#cmakedefine ENABLE_X86
+#cmakedefine SMLNJ_ENABLE_ARM64
+#cmakedefine SMLNJ_ENABLE_X86
 
 /* Host architecture parameters */
-#cmakedefine ARCH_AMD64
-#cmakedefine ARCH_ARM64
+#cmakedefine SMLNJ_ARCH_AMD64
+#cmakedefine SMLNJ_ARCH_ARM64
 
 /* Host operating system parameters */
-#cmakedefine OPSYS_DARWIN
-#cmakedefine OPSYS_LINUX
+#cmakedefine SMLNJ_OPSYS_DARWIN
+#cmakedefine SMLNJ_OPSYS_LINUX
 
 #endif /* !_CONFIG_H_ */
