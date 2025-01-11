@@ -63,10 +63,10 @@ Status emitHeapFile (
     std::string errMsg;
     auto *target = llvm::TargetRegistry::lookupTarget(llvmTripleStr, errMsg);
     if (target == nullptr) {
-	std::cerr << "**** Fatal error: unable to find target for \""
-	    << llvmTripleStr << "\"\n";
-	std::cerr << "    [" << errMsg << "]\n";
-        ::exit(1);
+        std::cerr << "[FATAL ERROR] unable to find target for '"
+            << llvmTripleStr << "'\n"
+            << "    [" << errMsg << "]\n";
+        return Status::Failure;
     }
     llvm::TargetOptions tgtOptions{};
     llvm::TargetMachine *tgtMachine = target->createTargetMachine(
@@ -79,8 +79,8 @@ Status emitHeapFile (
 	llvm::CodeGenOptLevel::Less);
 
     if (tgtMachine == nullptr) {
-	std::cerr << "**** Fatal error: unable to create target machine\n";
-        assert(false);
+        std::cerr << "[FATAL ERROR] unable to create target machine\n";
+        return Status::Failure;
     }
 
     // get the integer types that we need
@@ -133,28 +133,6 @@ Status emitHeapFile (
     } else {
         // Object/assembly file output
 
-        std::string errMsg;
-        auto *llvmTarget = llvm::TargetRegistry::lookupTarget(llvmTripleStr, errMsg);
-        if (llvmTarget == nullptr) {
-            std::cerr << "[FATAL ERROR] unable to find target for '"
-                << llvmTripleStr << "' [" << errMsg << "]\n";
-            return Status::Failure;
-        }
-
-        std::unique_ptr<llvm::TargetMachine> tgtMachine(llvmTarget->createTargetMachine(
-            llvmTripleStr.c_str(),
-            "generic",
-            "", /* features string */
-            llvm::TargetOptions(),
-            llvm::Reloc::PIC_,
-            std::optional<llvm::CodeModel::Model>(),
-            llvm::CodeGenOptLevel::None));
-
-        if (!tgtMachine) {
-            std::cerr << "[FATAL ERROR] unable to create target machine\n";
-            return Status::Failure;
-        }
-
         // open the output object file
         std::error_code EC;
         llvm::raw_fd_ostream objOS(outFile, EC, llvm::sys::fs::OF_None);
@@ -164,6 +142,7 @@ Status emitHeapFile (
             return Status::Failure;
         }
 
+/* FIXME: assembly output does not work */
         // define a pass for output to the object file
         llvm::legacy::PassManager pass;
         auto cgFileType = (fileType == Output::ObjFile
