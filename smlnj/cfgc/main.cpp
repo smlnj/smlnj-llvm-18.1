@@ -22,9 +22,9 @@
 #include "object-file.hpp"
 #include "target-info.hpp"
 
-#if defined(ARCH_AMD64)
+#if defined(SMLNJ_ARCH_AMD64)
 constexpr std::string_view kHostArch = "x86_64";
-#elif defined(ARCH_ARM64)
+#elif defined(SMLNJ_ARCH_ARM64)
 constexpr std::string_view kHostArch = "aarch64";
 #else
 #  error unknown architeture
