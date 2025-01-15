@@ -48,8 +48,8 @@ endif(PROJECT_IS_TOP_LEVEL)
 #
 option (SMLNJ_CFGC_BUILD
   "Enable building the cfgc command-line tool" OFF)
-option (SMLNJ_HEAP2OBJ_BUILD
-  "Enable building the heap2obj command-line tool" OFF)
+option (SMLNJ_DEBUG_CODEGEN
+  "Enable debug messages in the code-generator library" OFF)
 
 ## Begin LLVM Configuration ##
 message(STATUS "** START LLVM CONFIGURATION **")

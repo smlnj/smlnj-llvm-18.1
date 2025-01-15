@@ -24,6 +24,12 @@ add_library(CFGCodeGen STATIC ${SRCS})
 
 add_dependencies(CFGCodeGen llvm-headers)
 
+# enable debug messages
+if (SMLNJ_DEBUG_CODEGEN)
+  message(STATUS "Code-generator debug messages enabled")
+  target_compile_definitions(CFGCodeGen PRIVATE DEBUG_CODEGEN)
+endif()
+
 target_compile_options(CFGCodeGen PRIVATE -fno-exceptions -fno-rtti)
 target_include_directories(CFGCodeGen PRIVATE
   ${SMLNJ_LLVM_BINARY_DIR}/smlnj/include
