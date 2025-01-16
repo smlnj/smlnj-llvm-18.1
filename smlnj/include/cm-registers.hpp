@@ -58,7 +58,7 @@ class CMRegInfo {
     /// return the stack offset for this register
     int offset () const { return this->_offset; }
 
-    std::string_view const &name () const { return this->_name; }
+    std::string_view name () const { return this->_name; }
 
     bool isMachineReg () const { return (this->_idx >= 0); }
     bool isMemReg () const { return (this->_idx < 0); }
@@ -71,7 +71,7 @@ class CMRegInfo {
     int _offset;                ///< For stack allocated registers, this is the offset from
                                 ///  the stack pointer to where the register is allocated in
                                 ///  the frame
-    std::string_view _name;     ///< The register's name
+    std::string _name;          ///< The register's name
 
     CMRegInfo (CMRegId id, int idx, int off);
 

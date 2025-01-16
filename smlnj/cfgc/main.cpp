@@ -143,7 +143,7 @@ static smlnj::cfgcg::Context *gContext = nullptr;
 bool setTarget (std::string_view target)
 {
     if (gContext != nullptr) {
-	if (gContext->targetInfo()->name == target) {
+	if (target.compare(gContext->targetInfo()->name) == 0) {
 	    return false;
 	}
 	delete gContext;

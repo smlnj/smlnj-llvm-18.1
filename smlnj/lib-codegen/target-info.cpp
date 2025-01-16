@@ -139,7 +139,7 @@ std::vector<std::string_view> TargetInfo::targetNames ()
 TargetInfo const *TargetInfo::infoForTarget (std::string_view name)
 {
     for (int i = 0;  i < kNumTargets;  i++) {
-	if (Targets[i]->name == name) {
+	if (name.compare(Targets[i]->name) == 0) {
 	    return Targets[i];
 	}
     }

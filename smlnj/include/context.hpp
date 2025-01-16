@@ -110,9 +110,13 @@ class Context : public llvm::LLVMContext {
     /// get the IR builder
     llvm::IRBuilder<> & build () { return this->_builder; }
 
-    /// define a new LLVM function for a cluster with the given type; the `isFirst` flag
-    /// should be true for the entry function of the module.
-    llvm::Function *newFunction (llvm::FunctionType *fnTy, std::string_view name, bool isFirst);
+    /// define a new LLVM function for a cluster
+    /// \param fnTy  the LLVM type of the function
+    /// \param name  the name of the function
+    /// \param isFirst  this flag should be `true` if, and only if, the function is
+    ///                 the entry function of the module.
+    /// \return a pointer to the new function
+    llvm::Function *newFunction (llvm::FunctionType *fnTy, std::string const &name, bool isFirst);
 
     /// create a function type from a vector of parameter types.  This function adds
     /// the extra types corresponding to the SML registers and for the unused

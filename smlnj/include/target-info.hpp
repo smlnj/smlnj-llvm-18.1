@@ -23,10 +23,10 @@ namespace smlnj {
 namespace cfgcg {
 
 struct TargetInfo {
-    std::string_view name;              ///< the target's name; this should agree with LLVM's
+    std::string name;                   ///< the target's name; this should agree with LLVM's
                                         ///  naming conventions (see lib/Support/Triple.cpp).
-    std::string_view dataLayout;        ///< LLVM data layout string
-    std::string_view spName;            ///< the assembly name of the stack pointer register
+    std::string dataLayout;             ///< LLVM data layout string
+    std::string spName;                 ///< the assembly name of the stack pointer register
     llvm::Triple::ArchType arch;        ///< target architecture
     int wordSzB;                        ///< size in bytes of ML word (should also be the
                                         ///  same as the native pointer size)
