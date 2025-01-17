@@ -17,6 +17,8 @@
 #       -debug          -- build a debug release of LLVM (WARNING: debug releases take
 #                          much longer to build and are signficantly slower than the
 #                          default release builds)
+#       -sanitize-address
+#		        -- sanitize addresses to check for memory bugs
 #       -docs           -- build LLVM API documentation
 #       -config         -- configure, but do not compile
 #       -install <dir>  -- specify installation directory; default is this directory
@@ -31,21 +33,23 @@ LLVMDIR=$(cd $CMDDIR; pwd)
 usage() {
   echo "usage: build-llvm.sh [ options ]"
   echo "options:"
-  echo "    -h, -help       print this message and exit"
-  echo "    -all-targets    build a version of LLVM that supports all hardware targets"
-  echo "                    that are known to SML/NJ"
-  echo "    -build-cfgc     build the cfgc (CFG compiler) tool."
-  echo "    -debug          build a debug version of the LLVM libraries"
-  echo "    -docs           build LLVM API documentation"
-  echo "    -config         configure, but do not compile"
-  echo "    -install <dir>  specify installation directory (default: $CMDDIR)"
-  echo "    -ninja          generate build.ninja files (instead of Unix makefiles)"
+  echo "    -h, -help          print this message and exit"
+  echo "    -all-targets       build a version of LLVM that supports all hardware"
+  echo "                       targets that are known to SML/NJ"
+  echo "    -build-cfgc        build the cfgc (CFG compiler) tool."
+  echo "    -debug             build a debug version of the LLVM libraries"
+  echo "    -sanitize-address  sanitize addresses to check for memory bugs"
+  echo "    -docs              build LLVM API documentation"
+  echo "    -config            configure, but do not compile"
+  echo "    -install <dir>     specify installation directory (default: $CMDDIR)"
+  echo "    -ninja             generate build.ninja files (instead of Unix makefiles)"
   exit $1
 }
 
 CONFIG_ONLY=no
 LLVM_BUILD_TYPE=Release
 USE_GOLD_LD=no
+SANITIZE_ADDRESS=no
 NPROCS=2
 GENERATOR="make"
 
@@ -110,6 +114,9 @@ while [ "$#" != "0" ] ; do
     -debug)
       LLVM_BUILD_TYPE=Debug
       ;;
+    -sanitize-address)
+      SANITIZE_ADDRESS=yes
+      ;;
     -docs)
       BUILD_DOCS=yes
       ;;
@@ -144,7 +151,7 @@ fi
 #
 cmake --list-presets > /dev/null 2>&1
 if [ $? != 0 ] ; then
-  echo "Installation of SML/NJ requires CMake version 3.19 or later"
+  echo "Installation of SML/NJ requires CMake version 3.23 or later"
   exit 1
 fi
 
@@ -159,6 +166,10 @@ CMAKE_DEFS="\
 
 if [ x"$USE_GOLD_LD" = xyes ] ; then
   CMAKE_DEFS="$CMAKE_DEFS -DLLVM_USE_LINKER=gold"
+fi
+
+if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
+  CMAKE_DEFS="$CMAKE_DEFS -DLLVM_USE_SANITIZER=Address"
 fi
 
 if [ x"$BUILD_DOCS" = xyes ] ; then
