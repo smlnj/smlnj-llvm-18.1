@@ -29,4 +29,7 @@
 #cmakedefine SMLNJ_OPSYS_DARWIN
 #cmakedefine SMLNJ_OPSYS_LINUX
 
+/* file suffix for object files */
+#define OBJECT_FILE_EXTENSION "@CMAKE_CXX_OUTPUT_EXTENSION@"
+
 #endif /* !_CONFIG_H_ */

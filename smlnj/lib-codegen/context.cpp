@@ -655,7 +655,7 @@ void Context::dumpAsm (std::string_view stem) const
 
 void Context::dumpObj (std::string_view stem) const
 {
-// FIXME: on Windows, the extension should be ".obj"
+// FIXME: use OBJECT_FILE_EXTENSION so that on Windows the extension is ".obj"
     std::string outFile = std::string(stem) + ".o";
     this->_gen->emitFile (this->_module, outFile, llvm::CodeGenFileType::ObjectFile);
 }
@@ -666,7 +666,7 @@ void Context::dumpLL (std::string_view stem) const
     std::string outFile = std::string(stem) + ".ll";
     llvm::raw_fd_ostream outS(outFile, EC, llvm::sys::fs::OF_Text);
     if (EC) {
-/* TODO */
+/* FIXME: report the error */
     }
     this->_module->print(outS, nullptr);
     outS.close();
