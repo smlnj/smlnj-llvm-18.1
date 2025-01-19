@@ -81,4 +81,3 @@ if (SMLNJ_CFGC_BUILD)
   message(STATUS "cfgc tool enabled.")
   add_subdirectory(cfgc)
 endif()
-
