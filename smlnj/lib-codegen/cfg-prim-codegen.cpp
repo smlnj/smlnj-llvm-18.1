@@ -83,8 +83,13 @@ namespace CFG_Prim {
 	  // get a `char *` pointer to obj+offset
             auto adr = cxt->createGEP (obj, offset);
             if (argTy == cxt->mlValueTy) {
-              // the field should be a native-sized integer
-                assert (elemTy == cxt->intTy && "expected native integer field");
+                // the argument and field types should have the same size
+                // Note that in some cases, the field type might be "f64",
+                // but we treat it as raw pointer-sized data, since we are
+                // just writing it into memory
+                assert (
+                    (elemTy->getPrimitiveSizeInBits() == cxt->intTy->getPrimitiveSizeInBits())
+                    && "expected native integer field");
                 cxt->createStoreML (args[i], adr);
             }
             else {
