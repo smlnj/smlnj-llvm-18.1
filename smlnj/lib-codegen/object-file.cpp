@@ -89,7 +89,7 @@ public:
     /// return the total size of the memory object
     size_t size () const
     {
-        return this->_code._paddedSzb + this->_roData._paddedSzb;
+        return this->_code._paddedSzb + this->_roData._paddedSzb + this->_rwData._paddedSzb;
     }
 
 private:
@@ -112,6 +112,9 @@ llvm::dbgs() << "# setSize: szb = " << szb << "; aligned szb = "
 << this->_paddedSzb << "\n";
 #endif
         }
+
+        /// return the next address past this section
+        uint8_t *top () const { return this->_data + this->_paddedSzb; }
 
         /// allocate memory in the section
         uint8_t *alloc (size_t nb, unsigned align)
@@ -153,8 +156,9 @@ void MemManager::reserveAllocationSpace (
     llvm::Align rwDataAlign)
 {
 #ifdef DEBUG_CODEGEN
-llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "; roData = " << roDataSzb
-<< "; rwData = " << rwDataSzb << "\n";
+llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "@" << codeAlign.value()
+<< "; roData = " << roDataSzb << "@" << roDataAlign.value()
+<< "; rwData = " << rwDataSzb << "@" << rwDataAlign.value() << "\n";
 #endif
 
 //    assert (rwDataSzb == 0 && "unexpected non-empty RW data");
@@ -179,10 +183,16 @@ llvm::dbgs() << "# reserve: base = " << this->_base
 #endif
 /*DEBUG*/
 
-    /// assign base adresses for the sections
+    /// assign base addresses for the sections
     this->_code._data = this->_base;
-    this->_roData._data = this->_base + this->_code._paddedSzb;
-    this->_rwData._data = this->_roData._data + this->_roData._paddedSzb;
+    this->_roData._data = this->_code.top();
+    this->_rwData._data = this->_roData.top();
+/*DEBUG*/
+llvm::dbgs() << "# reserve: code = [" << this->_code._data << ".." << this->_code.top()
+<< "]; roData = [" << this->_roData._data << ".." << this->_roData.top()
+<< "]; rwData = [" << this->_rwData._data << ".." << this->_rwData.top()
+<< "]\n";
+/*DEBUG*/
 
 } // MemManager::reserveAllocationSpace
 
