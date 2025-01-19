@@ -188,10 +188,12 @@ llvm::dbgs() << "# reserve: base = " << this->_base
     this->_roData._data = this->_code.top();
     this->_rwData._data = this->_roData.top();
 /*DEBUG*/
+#ifdef DEBUG_CODEGEN
 llvm::dbgs() << "# reserve: code = [" << this->_code._data << ".." << this->_code.top()
 << "]; roData = [" << this->_roData._data << ".." << this->_roData.top()
 << "]; rwData = [" << this->_rwData._data << ".." << this->_rwData.top()
 << "]\n";
+#endif
 /*DEBUG*/
 
 } // MemManager::reserveAllocationSpace
