@@ -857,7 +857,7 @@ class Context : public llvm::LLVMContext {
     void _initSPAccess ();
 
     /// utility function for loading a value from the stack
-    llvm::Value *_loadFromStack (int offset, std::string_view name)
+    llvm::Value *_loadFromStack (int offset, std::string const &name)
     {
         return this->build().CreateAlignedLoad (
             this->mlValueTy,

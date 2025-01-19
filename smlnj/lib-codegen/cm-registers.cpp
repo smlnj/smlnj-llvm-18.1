@@ -18,7 +18,7 @@ namespace cfgcg {
 
 // the extra arguments that are added to thread the state of the reserved
 // registers through the control-flow graph.
-static std::string_view gRegNames[CMRegInfo::NUM_REGS] = {
+static std::string gRegNames[CMRegInfo::NUM_REGS] = {
 	"allocPtr", "limitPtr", "storePtr", "exnPtr", "varPtr"
     };
 

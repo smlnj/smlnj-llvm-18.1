@@ -58,7 +58,7 @@ class CMRegInfo {
     /// return the stack offset for this register
     int offset () const { return this->_offset; }
 
-    std::string_view name () const { return this->_name; }
+    std::string const &name () const { return this->_name; }
 
     bool isMachineReg () const { return (this->_idx >= 0); }
     bool isMemReg () const { return (this->_idx < 0); }
@@ -153,10 +153,6 @@ class CMRegState {
     llvm::Value * _val[CMRegInfo::NUM_REGS];    ///< mapping from registers IDs to their
                                                 ///  current representation as an LLVM value.
 };
-
-/// initialize the static register information for the target
-///
-CMRegs *InitRegInfo (std::string const &target);
 
 } // namespace cfgcg
 } // namespace smlnj
