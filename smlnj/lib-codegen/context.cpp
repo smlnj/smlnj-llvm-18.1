@@ -187,7 +187,7 @@ void Context::beginFrag ()
 
 llvm::Function *Context::newFunction (
     llvm::FunctionType *fnTy,
-    std::string const &name,
+    std::string_view name,
     bool isPublic)
 {
     llvm::Function *fn = llvm::Function::Create (

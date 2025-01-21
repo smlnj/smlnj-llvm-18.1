@@ -116,7 +116,7 @@ class Context : public llvm::LLVMContext {
     /// \param isFirst  this flag should be `true` if, and only if, the function is
     ///                 the entry function of the module.
     /// \return a pointer to the new function
-    llvm::Function *newFunction (llvm::FunctionType *fnTy, std::string const &name, bool isFirst);
+    llvm::Function *newFunction (llvm::FunctionType *fnTy, std::string_view name, bool isFirst);
 
     /// create a function type from a vector of parameter types.  This function adds
     /// the extra types corresponding to the SML registers and for the unused
@@ -696,6 +696,15 @@ class Context : public llvm::LLVMContext {
             this->asPtr(adr),
             llvm::MaybeAlign(this->_wordSzB));
     }
+    /// create a store of a native integer/word
+    void createStoreInt (llvm::Value *v, llvm::Value *adr)
+    {
+        this->_builder.CreateAlignedStore (
+            v,
+            this->asPtr(adr),
+            llvm::MaybeAlign(this->_wordSzB));
+    }
+    /// create an aligned store of a value
     void createStore (llvm::Value *v, llvm::Value *adr, unsigned align)
     {
         this->_builder.CreateAlignedStore (
