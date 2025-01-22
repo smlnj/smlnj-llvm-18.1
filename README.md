@@ -3,7 +3,7 @@
 This repository is a version of [**LLVM**](https://llvm.org) with support for the JWA
 calling convention.  It is meant to be used as a submodule for the development
 branch of [**Standard ML of New Jersey** (**SML/NJ**)](https://smlnj.org) and is based on **LLVM**
-version 18.1.6.
+version 18.1.8.
 
 ## Removed components
 
