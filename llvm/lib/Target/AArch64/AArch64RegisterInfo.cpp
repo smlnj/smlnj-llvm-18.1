@@ -584,6 +584,9 @@ bool AArch64RegisterInfo::isArgumentRegister(const MachineFunction &MF,
     report_fatal_error("Unsupported calling convention.");
   case CallingConv::GHC:
     return HasReg(CC_AArch64_GHC_ArgRegs, Reg);
+/* JWA_ADD */
+  case CallingConv::JWA:
+    return HasReg(CC_AArch64_JWA_ArgRegs, Reg);
   case CallingConv::C:
   case CallingConv::Fast:
   case CallingConv::PreserveMost:

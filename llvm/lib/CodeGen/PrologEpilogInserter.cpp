@@ -1172,6 +1172,11 @@ void PEI::calculateFrameObjectOffsets(MachineFunction &MF) {
 void PEI::insertPrologEpilogCode(MachineFunction &MF) {
   const TargetFrameLowering &TFI = *MF.getSubtarget().getFrameLowering();
 
+/* JWA_ADD */
+  // In the JWA calling convention, functions have no prologue/epilogue.
+  if (MF.getFunction().getCallingConv() == CallingConv::JWA)
+    return;
+
   // Add prologue to the function...
   for (MachineBasicBlock *SaveBlock : SaveBlocks)
     TFI.emitPrologue(MF, *SaveBlock);
