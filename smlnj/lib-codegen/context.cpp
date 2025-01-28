@@ -534,7 +534,7 @@ void Context::_storeMemReg (CMRegId r, llvm::Value *v)
 //
 llvm::Value *Context::allocRecord (llvm::Value *desc, Args_t const & args)
 {
-    assert (desc->getType() == this->mlValueTy && "descriptor should be ML Value");
+    assert (desc->getType() == this->intTy && "descriptor should be an integer");
 
     int len = args.size();
     llvm::Value *allocPtr = this->mlReg (CMRegId::ALLOC_PTR);

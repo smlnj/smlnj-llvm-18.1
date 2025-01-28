@@ -41,13 +41,13 @@ namespace CFG_Prim {
       // the first argument is the record's descriptor word and the second
       // is the content of the special object.
         assert (args.size() == 2 && "expected descriptor and content");
-        return cxt->allocRecord (cxt->asMLValue(args[0]), { args[1] });
+        return cxt->allocRecord (cxt->asInt(args[0]), { args[1] });
 
     }
 
     llvm::Value *RECORD::codegen (smlnj::cfgcg::Context *cxt, Args_t const &args)
     {
-        return cxt->allocRecord (this->_v_desc.toUInt64(), args);
+        return cxt->allocRecord (cxt->uConst(this->_v_desc.toUInt64()), args);
 
     } // RECORD::codegen
 
