@@ -55,7 +55,7 @@ static TargetInfo Arm64Info = {
 	"aarch64",			// official LLVM triple name
 	"e-" DL_MANGLE "-i64:64-i128:128-n32:64-S128", // LLVM data layout string
 	"sp",				// stack-pointer name
-	llvm::Triple::aarch64,
+	llvm::Triple::aarch64,          // LLVM architecture type
 	8, 64,				// word size in bytes and bits
 	29,				// numRegs
 	3,				// numCalleeSaves
@@ -85,7 +85,7 @@ static TargetInfo X86_64Info = {
 	"x86_64",			// official LLVM triple name
 	"e-" DL_MANGLE "-i64:64-n8:16:32:64-S128", // LLVM data layout string
 	"rsp",				// stack-pointer name
-	llvm::Triple::x86_64,
+	llvm::Triple::x86_64,           // LLVM architecture type
 	8, 64,				// word size in bytes and bits
 	18,				// numRegs
 	3,				// numCalleeSaves
@@ -149,6 +149,13 @@ TargetInfo const *TargetInfo::infoForTarget (std::string_view name)
 
 llvm::Triple TargetInfo::getTriple() const
 {
+/* FIXME: because of ABI differences, we need to make the OS settable as part
+ * of cross compilation.  For now, we just hack the case where the target is
+ * Arm64 to allow cross compiling to Arm from Linux.
+ */
+    if (this == &Arm64Info) {
+        return llvm::Triple(this->name, "apple", "macos");
+    }
     return llvm::Triple(this->name, kVendor, kOS);
 }
 
