@@ -17,7 +17,7 @@ namespace cfgcg {
 
 #if defined(SMLNJ_OPSYS_DARWIN)
 constexpr std::string_view kVendor = "apple";
-constexpr std::string_view kOS = "macosx";
+constexpr std::string_view kOS = "macos";
 #define DL_MANGLE "m:o" // MachO mangling
 #elif defined(SMLNJ_OPSYS_LINUX)
 constexpr std::string_view kVendor = "unknown";
@@ -154,7 +154,7 @@ llvm::Triple TargetInfo::getTriple() const
  * Arm64 to allow cross compiling to Arm from Linux.
  */
     if (this == &Arm64Info) {
-        return llvm::Triple(this->name, "apple", "macosx");
+        return llvm::Triple(this->name, "apple", "macos");
     }
     return llvm::Triple(this->name, kVendor, kOS);
 }
