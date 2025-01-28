@@ -10922,11 +10922,12 @@ void SelectionDAGISel::LowerArguments(const Function &F) {
   const DataLayout &DL = DAG.getDataLayout();
   SmallVector<ISD::InputArg, 16> Ins;
 
-#ifdef BROKEN_NAKED_ATTRIBUTE
+/* JWA_REMOVE -- we don't need this workaround, since we no longer require the "naked" attribute */
+//#ifdef BROKEN_NAKED_ATTRIBUTE
   // In Naked functions we aren't going to save any registers.
   if (F.hasFnAttribute(Attribute::Naked))
     return;
-#endif
+//#endif
 
   if (!FuncInfo->CanLowerReturn) {
     // Put in an sret pointer parameter before all the other parameters.
