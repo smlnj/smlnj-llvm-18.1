@@ -154,7 +154,7 @@ llvm::Triple TargetInfo::getTriple() const
  * Arm64 to allow cross compiling to Arm from Linux.
  */
     if (this == &Arm64Info) {
-        return llvm::Triple(this->name, "apple", "macos");
+        return llvm::Triple(this->name, "apple", "macosx");
     }
     return llvm::Triple(this->name, kVendor, kOS);
 }
