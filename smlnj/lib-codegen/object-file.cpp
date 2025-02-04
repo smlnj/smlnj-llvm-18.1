@@ -36,7 +36,7 @@ class MemManager : public llvm::RTDyldMemoryManager
 {
 public:
     /// constructor
-    MemManager () : _base(nullptr), _code(), _roData() { }
+    MemManager () : _base(nullptr), _code("code"), _roData("rodata"), _rwData("rwdata") { }
 
     /// destructor
     virtual ~MemManager () override
@@ -49,6 +49,10 @@ public:
     /// we want to put all of the sections together in a single chunk of memory, so
     /// we tell the JIT linker that it needs to call `reserveAllocationSpace`.
     virtual bool needsToReserveAllocationSpace () override { return true; }
+
+/*
+    virtual bool allowStubAllocation () override { return false; }
+*/
 
     virtual void reserveAllocationSpace (
         uintptr_t codeSzb,
@@ -99,16 +103,27 @@ private:
         size_t _szb;            ///< current size of code/data in section; this
                                 ///  represents the sum of allocations in the section
         size_t _paddedSzb;      ///< padded size of the section
+#ifdef DEBUG_CODEGEN
+        std::string _name;      ///< section name used in debug messages
+#endif
 
         /// constructor
-        _Section () : _data(nullptr), _szb(0), _paddedSzb(0) { }
+#ifdef DEBUG_CODEGEN
+        _Section (std::string_view name)
+        : _data(nullptr), _szb(0), _paddedSzb(0), _name(std::string(name))
+        { }
+#else
+        _Section (std::string_view name)
+        : _data(nullptr), _szb(0), _paddedSzb(0)
+        { }
+#endif
 
         /// set the padded size of the section
         void setSize (size_t szb, llvm::Align align)
         {
             this->_paddedSzb = alignBy(szb, align);
 #ifdef DEBUG_CODEGEN
-llvm::dbgs() << "# setSize: szb = " << szb << "; aligned szb = "
+llvm::dbgs() << "# [" << this->_name << "] setSize: szb = " << szb << "; padded szb = "
 << this->_paddedSzb << "\n";
 #endif
         }
@@ -119,21 +134,21 @@ llvm::dbgs() << "# setSize: szb = " << szb << "; aligned szb = "
         /// allocate memory in the section
         uint8_t *alloc (size_t nb, unsigned align)
         {
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# [" << this->_name << "] alloc: nb = " << nb << "; align = " << align
+<< "; current szb = " << this->_szb << "; base = " << this->_data
+<< "; current top = " << (void *)(this->_data + alignBy(this->_szb, align)) << "\n";
+#endif
             assert (this->_data != nullptr && "no memory allocated for section");
             assert (alignBy(this->_szb, align) + alignBy(nb, align) <= this->_paddedSzb
                 && "insufficient space for allocation");
 
             // the base for this allocation
             uint8_t *ptr = this->_data + alignBy(this->_szb, align);
-#ifdef DEBUG_CODEGEN
-llvm::dbgs() << "# alloc: nb = " << nb << "; align = " << align
-<< "; current szb = " << this->_szb << "; base = " << this->_data
-<< "; current top = " << (void *)ptr << "\n";
-#endif
             // the new size
             this->_szb = (ptr - this->_data) + alignBy(nb, align);
 #ifdef DEBUG_CODEGEN
-llvm::dbgs() << "# alloc: new size = " << this->_szb
+llvm::dbgs() << "# [" << this->_name << "] alloc: new size = " << this->_szb
 << "; new top = " << this->_data + this->_szb << "\n";
 #endif
             return ptr;
@@ -165,13 +180,15 @@ llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "@" << codeAlign.value()
     assert (this->_base == nullptr && "memory already allocated");
 
     // set the section sizes with padding for alignment.  Since we are going to
-    // concatenate the sections, we need to pad the code section by the greatest
-    // of the alignments
-    if (roDataAlign > codeAlign) { codeAlign = roDataAlign; }
-    if (rwDataAlign > codeAlign) { codeAlign = rwDataAlign; }
-    this->_code.setSize(codeSzb, codeAlign);
-    this->_roData.setSize(roDataSzb, roDataAlign);
-    this->_rwData.setSize(rwDataSzb, rwDataAlign);
+    // concatenate the sections, we use the greatest alignment value as the padding
+    // for all sections
+    auto maxAlign = llvm::Align(8); /* this is a workaround for an LLVM bug (Issue #125529) */
+    if (codeAlign > maxAlign) { maxAlign = codeAlign; }
+    if (roDataAlign > maxAlign) { codeAlign = roDataAlign; }
+    if (rwDataAlign > maxAlign) { codeAlign = rwDataAlign; }
+    this->_code.setSize(codeSzb, maxAlign);
+    this->_roData.setSize(roDataSzb, maxAlign);
+    this->_rwData.setSize(rwDataSzb, maxAlign);
 
     /// allocate the memory for the in-memory sections
     this->_base = new uint8_t [this->size()];
@@ -179,6 +196,7 @@ llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "@" << codeAlign.value()
 /*DEBUG*/
 llvm::dbgs() << "# reserve: base = " << this->_base
 << "; size = " << (int)(this->size())
+<< "; align = " << codeAlign.value()
 << "; top = " << (void *)(this->_base + this->size()) << "\n";
 #endif
 /*DEBUG*/
