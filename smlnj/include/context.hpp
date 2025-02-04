@@ -829,12 +829,12 @@ class Context : public llvm::LLVMContext {
     llvm::FunctionType *_raiseOverflowFnTy;     // type of raise_overflow function
 
     // a basic block for the current cluster that will raise the Overflow exception
-    llvm::BasicBlock            *_overflowBB;
+    llvm::BasicBlock *_overflowBB;
     std::vector<llvm::PHINode *> _overflowPhiNodes;
 
     // tracking the state of the SML registers
-    CMRegs               _regInfo;       // target-specific register info
-    CMRegState                   _regState;      // current register values
+    CMRegs _regInfo;                            // target-specific register info
+    CMRegState _regState;                       // current register values
 
     /// target-machine properties
     int64_t _wordSzB;
