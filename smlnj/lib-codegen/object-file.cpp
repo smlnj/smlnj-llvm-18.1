@@ -36,13 +36,18 @@ class MemManager : public llvm::RTDyldMemoryManager
 {
 public:
     /// constructor
-    MemManager () : _base(nullptr), _code("code"), _roData("rodata"), _rwData("rwdata") { }
+    /// \param align  alignment for the base of the code object; this value is
+    ///               is required to ensure that relocation on Arm works correctly
+    MemManager (llvm::Align align)
+    : _mem(nullptr), _base(nullptr), _baseAlign(uintptr_t(align.value())),
+      _code("code"), _roData("rodata"), _rwData("rwdata")
+    { }
 
     /// destructor
     virtual ~MemManager () override
     {
-        if (this->_base != nullptr) {
-            delete[] this->_base;
+        if (this->_mem != nullptr) {
+            delete[] this->_mem;
         }
     }
 
@@ -155,7 +160,9 @@ llvm::dbgs() << "# [" << this->_name << "] alloc: new size = " << this->_szb
         }
     };
 
-    uint8_t *_base;             ///< pointer to memory
+    uint8_t *_mem;              ///< pointer to allocated memory
+    uint8_t *_base;             ///< pointer to base address for object file data
+    uintptr_t _baseAlign;       ///< alignment for _base pointer
     _Section _code;             ///< code section
     _Section _roData;           ///< read-only data section
     _Section _rwData;           ///< read-write data section
@@ -176,25 +183,34 @@ llvm::dbgs() << "# reserve: codeSzb = " << codeSzb << "@" << codeAlign.value()
 << "; rwData = " << rwDataSzb << "@" << rwDataAlign.value() << "\n";
 #endif
 
-//    assert (rwDataSzb == 0 && "unexpected non-empty RW data");
-    assert (this->_base == nullptr && "memory already allocated");
+    assert (this->_mem == nullptr && "memory already allocated");
 
     // set the section sizes with padding for alignment.  Since we are going to
     // concatenate the sections, we use the greatest alignment value as the padding
     // for all sections
     auto maxAlign = llvm::Align(8); /* this is a workaround for an LLVM bug (Issue #125529) */
     if (codeAlign > maxAlign) { maxAlign = codeAlign; }
-    if (roDataAlign > maxAlign) { codeAlign = roDataAlign; }
-    if (rwDataAlign > maxAlign) { codeAlign = rwDataAlign; }
+    if (roDataAlign > maxAlign) { maxAlign = roDataAlign; }
+    if (rwDataAlign > maxAlign) { maxAlign = rwDataAlign; }
     this->_code.setSize(codeSzb, maxAlign);
     this->_roData.setSize(roDataSzb, maxAlign);
     this->_rwData.setSize(rwDataSzb, maxAlign);
 
+    // pad the size of the allocation so that we can guarantee correct alignment
+    auto totalSize = this->size() + this->_baseAlign - 1;
+
     /// allocate the memory for the in-memory sections
-    this->_base = new uint8_t [this->size()];
-#ifdef DEBUG_CODEGEN
+    this->_mem = new uint8_t [totalSize];
+    this->_base =
+        reinterpret_cast<uint8_t *>(
+            alignBy(reinterpret_cast<uintptr_t>(this->_mem), this->_baseAlign));
+
+    assert ((this->_base + this->size()) <= (this->_mem + totalSize) && "too small");
+
 /*DEBUG*/
-llvm::dbgs() << "# reserve: base = " << this->_base
+#ifdef DEBUG_CODEGEN
+llvm::dbgs() << "# reserve: mem = " << this->_mem
+<< "; base = " << this->_base
 << "; size = " << (int)(this->size())
 << "; align = " << codeAlign.value()
 << "; top = " << (void *)(this->_base + this->size()) << "\n";
@@ -299,7 +315,7 @@ public:
 /***** class ObjectFile *****/
 
 ObjectFile::ObjectFile (ObjfileStream const &output)
-: _memManager(new MemManager)
+: _memManager(new MemManager(llvm::Align(0x1000))) /* FIXME: make the alignment target dependent */
 {
     auto bytes = output.getData();
 
@@ -312,7 +328,7 @@ ObjectFile::ObjectFile (ObjfileStream const &output)
     llvm::RuntimeDyld loader(*this->_memManager, symbolResolver);
 
 #ifdef DEBUG_CODEGEN
-llvm::dbgs() << "# link object file\n";
+llvm::dbgs() << "# link object file: " << object->makeTriple().str() << "\n";
 #endif
 
     // Use the LLVM object loader to load the object.
