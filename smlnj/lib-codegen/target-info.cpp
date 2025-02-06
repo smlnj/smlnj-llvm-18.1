@@ -152,10 +152,15 @@ llvm::Triple TargetInfo::getTriple() const
 /* FIXME: because of ABI differences, we need to make the OS settable as part
  * of cross compilation.  For now, we just hack the case where the target is
  * Arm64 to allow cross compiling to Arm from Linux.
+ * UPDATE: a better solution may be to put the CFG pickles in the binfiles
+ * (instead of code) and then generate the machine code as part of bootstrapping.
+ * We then would not have to support cross-compilation in the LLVM build.
  */
+#ifdef SMLNJ_ENABLE_ARM64
     if (this == &Arm64Info) {
         return llvm::Triple(this->name, "apple", "macos");
     }
+#endif
     return llvm::Triple(this->name, kVendor, kOS);
 }
 
