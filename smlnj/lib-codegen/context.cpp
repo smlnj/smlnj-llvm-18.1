@@ -200,8 +200,6 @@ llvm::Function *Context::newFunction (
     fn->setCallingConv (llvm::CallingConv::JWA);
 
   // assign attributes to the function
-/* JWA_REMOVE */
-//    fn->addFnAttr (llvm::Attribute::Naked);
     fn->addFnAttr (llvm::Attribute::NoUnwind);
 
     return fn;
