@@ -61,8 +61,8 @@ static TargetInfo Arm64Info = {
 	3,				// numCalleeSaves
 	true,				// hasPCRel
 	{ 0, 0, 0, 0, 0 },		// no memory registers
-	8232,				// call-gc offset
-	8224,				// raise_overflow offset
+	8216,				// call-gc offset
+	8208,				// raise_overflow offset
 	8*1024,				// allocation slop
         false,                          // initialized
 	LLVMInitializeAArch64TargetInfo,// initTargetInfo
