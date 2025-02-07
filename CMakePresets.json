@@ -92,7 +92,17 @@
             "displayName" : "smlnj-llvm-debug",
 	    "inherits" : "smlnj-llvm-base",
             "cacheVariables" : {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE" : "Debug"
+	    }
+	},
+        {
+            "name" : "smlnj-llvm-release+asserts",
+            "displayName" : "smlnj-llvm-release",
+	    "inherits" : "smlnj-llvm-base",
+            "cacheVariables" : {
+                "CMAKE_BUILD_TYPE" : "Release",
+                "LLVM_ENABLE_ASSERTIONS" : "ON",
+		"LLVM_ENABLE_ABI_BREAKING_CHECKS" : "OFF"
 	    }
 	},
         {
@@ -100,7 +110,7 @@
             "displayName" : "smlnj-llvm-release",
 	    "inherits" : "smlnj-llvm-base",
             "cacheVariables" : {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE" : "Release"
 	    }
 	}
     ]
