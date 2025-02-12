@@ -117,7 +117,7 @@ Status emitHeapFile (
         true,
         llvm::GlobalValue::ExternalLinkage,
         heapStruct,
-        "_smlnj_heap_image");
+        "smlnj_heap_image");
 
     if (fileType == Output::eLLVMAsmFile) {
         // LLVM output
