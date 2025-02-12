@@ -76,6 +76,7 @@ include_directories(include)
 add_subdirectory(include)
 add_subdirectory(lib-codegen)
 add_subdirectory(lib-heap2obj)
+add_subdirectory(heap2obj)
 
 if (SMLNJ_CFGC_BUILD)
   message(STATUS "cfgc tool enabled.")

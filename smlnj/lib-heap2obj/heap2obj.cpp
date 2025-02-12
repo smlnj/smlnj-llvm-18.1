@@ -66,7 +66,7 @@ Status emitHeapFile (
         std::cerr << "[FATAL ERROR] unable to find target for '"
             << llvmTripleStr << "'\n"
             << "    [" << errMsg << "]\n";
-        return Status::Failure;
+        return Status::eFailure;
     }
     llvm::TargetOptions tgtOptions{};
     llvm::TargetMachine *tgtMachine = target->createTargetMachine(
@@ -80,7 +80,7 @@ Status emitHeapFile (
 
     if (tgtMachine == nullptr) {
         std::cerr << "[FATAL ERROR] unable to create target machine\n";
-        return Status::Failure;
+        return Status::eFailure;
     }
 
     // get the integer types that we need
@@ -119,14 +119,14 @@ Status emitHeapFile (
         heapStruct,
         "_smlnj_heap_image");
 
-    if (fileType == Output::LLVMAsmFile) {
+    if (fileType == Output::eLLVMAsmFile) {
         // LLVM output
         std::error_code EC;
         llvm::raw_fd_ostream llOS(outFile, EC, llvm::sys::fs::OF_Text);
         if (EC) {
             std::cerr << "[FATAL ERROR] unable to open output file '"
                 << outFile << "'\n";
-            return Status::Failure;
+            return Status::eFailure;
         }
         llvmModule.print(llOS, nullptr);
         llOS.close();
@@ -139,19 +139,19 @@ Status emitHeapFile (
         if (EC) {
             std::cerr << "[FATAL ERROR] unable to open output file '"
                 << outFile << "'\n";
-            return Status::Failure;
+            return Status::eFailure;
         }
 
 /* FIXME: assembly output does not work */
         // define a pass for output to the object file
         llvm::legacy::PassManager pass;
-        auto cgFileType = (fileType == Output::ObjFile
+        auto cgFileType = (fileType == Output::eObjFile
                 ? llvm::CodeGenFileType::ObjectFile
                 : llvm::CodeGenFileType::AssemblyFile);
         if (tgtMachine->addPassesToEmitFile(pass, objOS, nullptr, cgFileType)) {
             std::cerr << "[FATAL ERROR] unable to add pass to generate '"
                 << outFile << "'\n";
-            return Status::Failure;
+            return Status::eFailure;
         }
 
         pass.run(llvmModule);
@@ -159,7 +159,7 @@ Status emitHeapFile (
         objOS.close();
     }
 
-    return Status::Success;
+    return Status::eSuccess;
 
 } // emitHeapFile
 

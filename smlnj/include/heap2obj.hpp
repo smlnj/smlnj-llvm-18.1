@@ -17,18 +17,24 @@
 namespace smlnj {
 
 #ifndef _SMLNJ_BASE_HPP_
+
 // return status
 enum class Status {
-    Success,
-    Failure
+    eSuccess = 0,
+    eFailure
 };
+
+#ifndef OBJECT_FILE_EXTENSION
+#define OBJECT_FILE_EXTENSION ".o"
+#endif
+
 #endif
 
 /// different output targets
 enum class Output {
-    ObjFile,            ///< generate an object (".o") file
-    AsmFile,            ///< generate native assembly in a ".s" file
-    LLVMAsmFile         ///> generate LLVM assembly in a ".ll" file
+    eObjFile,           ///< generate an object (".o") file
+    eAsmFile,           ///< generate native assembly in a ".s" file
+    eLLVMAsmFile        ///< generate LLVM assembly in a ".ll" file
 };
 
 /// output the heap data to an object file
