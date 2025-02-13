@@ -9,7 +9,7 @@ set(SRCS
 
 add_library(Heap2Obj STATIC ${SRCS})
 
-add_dependencies(Heap2Obj llvm-headers)
+add_dependencies(Heap2Obj llvm-headers llvm-libraries)
 
 target_compile_definitions(Heap2Obj PRIVATE "-DSMLNJ_TARGET_TRIPLE=\"${LLVM_HOST_TRIPLE}\"")
 target_compile_options(Heap2Obj PRIVATE -fno-exceptions -fno-rtti)

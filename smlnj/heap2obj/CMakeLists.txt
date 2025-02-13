@@ -11,7 +11,7 @@ elseif (${SMLNJ_ARCH_ARM64})
 endif()
 
 # determine the LLVM libraries
-llvm_map_components_to_libnames(LLVM_LIBS ${target_arch})
+llvm_map_components_to_libnames(LLVM_LIBS ${LLVM_TARGETS_TO_BUILD})
 
 set(SRCS
   main.cpp)

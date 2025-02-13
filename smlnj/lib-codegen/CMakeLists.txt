@@ -22,7 +22,7 @@ set(SRCS
 
 add_library(CFGCodeGen STATIC ${SRCS})
 
-add_dependencies(CFGCodeGen llvm-headers)
+add_dependencies(CFGCodeGen llvm-headers llvm-libraries)
 
 # enable debug messages
 if (SMLNJ_DEBUG_CODEGEN)
