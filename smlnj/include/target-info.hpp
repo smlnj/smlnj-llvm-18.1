@@ -23,6 +23,25 @@
 namespace smlnj {
 namespace cfgcg {
 
+/// size and alignment info for a C type; we use this information for raw C calls
+struct TypeInfo {
+    uint32_t    sizeb;
+    uint32_t    align;
+};
+
+/// size and alignment info for the standard C typea
+struct CTypeInfo {
+    TypeInfo    boolTy;
+    TypeInfo    charTy;
+    TypeInfo    shortTy;
+    TypeInfo    intTy;
+    TypeInfo    longTy;
+    TypeInfo    longLongTy;
+    TypeInfo    floatTy;
+    TypeInfo    doubleTy;
+    TypeInfo    ptrTy;
+};
+
 struct TargetInfo {
     std::string name;                   ///< the target's name; this should agree with LLVM's
                                         ///  naming conventions (see lib/Support/Triple.cpp).
