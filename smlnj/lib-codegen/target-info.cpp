@@ -57,7 +57,8 @@ static TargetInfo Arm64Info = {
 	"sp",				// stack-pointer name
 	llvm::Triple::aarch64,          // LLVM architecture type
 	8, 64,				// word size in bytes and bits
-	29,				// numRegs
+	22,				// numGPArgRegs
+	16,				// numFPArgRegs
 	3,				// numCalleeSaves
 	true,				// hasPCRel
 	{ 0, 0, 0, 0, 0 },		// no memory registers
@@ -87,7 +88,8 @@ static TargetInfo X86_64Info = {
 	"rsp",				// stack-pointer name
 	llvm::Triple::x86_64,           // LLVM architecture type
 	8, 64,				// word size in bytes and bits
-	18,				// numRegs
+	11,				// numGPArgRegs
+	16,				// numFPArgRegs
 	3,				// numCalleeSaves
 	true,				// hasPCRel
 	{				// offsets for memory registers

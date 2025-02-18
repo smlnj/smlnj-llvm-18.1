@@ -14,6 +14,7 @@
 
 #include "llvm/TargetParser/Triple.h"
 
+#include <cstdint>
 #include <string_view>
 #include <vector>
 
@@ -31,8 +32,15 @@ struct TargetInfo {
     int wordSzB;                        ///< size in bytes of ML word (should also be the
                                         ///  same as the native pointer size)
     int wordSz;                         ///< size in bits of ML word (== 8*wordSzB)
-    int numRegs;                        ///< the number of SML registers used by the target
-    int numCalleeSaves;                 ///< the number of registers used for callee-save values
+    int numGPArgRegs;                   ///< the number of general-purpose registers that
+                                        ///  are available for argument passing.  These
+                                        ///  are std-link, std-clos, std-cont, std-arg,
+                                        ///  and the misc registers.  It does not include
+                                        ///  the implicit CMachine arguments (e.g., allocPtr).
+    int numFPArgRegs;                   ///  the number of floating-point registers that
+                                        ///  are available for argument passing
+    int numCalleeSaves;                 ///< the number of registers used for the SML
+                                        ///  callee-saves
     bool hasPCRel;                      ///< true if the target supports PC-relative addressing.
     int stkOffset[CMRegInfo::NUM_REGS]; ///< byte offset from stack pointer to location where
                                         ///  the value is stored.  Will be non-zero only
