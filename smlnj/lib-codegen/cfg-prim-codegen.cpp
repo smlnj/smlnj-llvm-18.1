@@ -74,7 +74,7 @@ namespace CFG_Prim {
         for (int i = 0;  i < len;  ++i) {
             auto fld = this->_v_fields[i];
             int szb = bitsToBytes(fld->get_sz());
-            if ((offset & szb) != 0) {
+            if ((offset & (szb - 1)) != 0) {
                 // align the offset
                 offset = (offset + (szb - 1)) & ~(szb - 1);
             }
