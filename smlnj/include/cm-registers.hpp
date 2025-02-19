@@ -140,7 +140,7 @@ class CMRegState {
         this->_basePtr = v;
     }
 
-#ifdef _DEBUG
+#ifndef NDEBUG
     void clearBasePtr () { this->_basePtr = nullptr; }
 #endif
 

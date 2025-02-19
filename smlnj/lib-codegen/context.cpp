@@ -26,11 +26,6 @@
 namespace smlnj {
 namespace cfgcg {
 
-/* control the adding of symbolic names to some values for easier debugging */
-#ifndef _DEBUG
-#  define NO_NAMES
-#endif
-
 /* FIXME: for now, these are all zero, but we should do something else */
 /* address spaces for various kinds of ML data that are necessarily disjoint */
 #define ML_HEAP_ADDR_SP		0		// immutable heap objects
@@ -354,7 +349,7 @@ void Context::setupStdEntry (CFG::attrs *attrs, CFG::frag *frag)
 	CMRegInfo const *info = this->_regInfo.info(static_cast<CMRegId>(i));
 	if (info->isMachineReg()) {
 	    llvm::Argument *arg = this->_curFn->getArg(hwIx++);
-#ifndef NO_NAMES
+#ifndef NDEBUG
 	    arg->setName (info->name());
 #endif
 	    this->_regState.set (info->id(), arg);
@@ -376,11 +371,11 @@ void Context::setupStdEntry (CFG::attrs *attrs, CFG::frag *frag)
       // get base address of cluster and cast to the native int type
 	auto basePtr = this->createPtrToInt (this->_curFn->getArg(baseIx));
 	this->_regState.setBasePtr (basePtr);
-#ifndef NO_NAMES
+#ifndef NDEBUG
 	basePtr->setName ("basePtr");
 #endif
     }
-#ifdef _DEBUG
+#ifndef NDEBUG
     else {
 	this->_regState.clearBasePtr ();
     }
@@ -491,7 +486,7 @@ llvm::Value *Context::evalLabel (llvm::Function *fn)
 	auto labAdr = this->_builder.CreateIntToPtr(
 	    this->createAdd (basePtr, this->labelDiff (fn, this->_curFn)),
 	    this->mlValueTy);
-#ifndef NO_NAMES
+#ifndef NDEBUG
 	labAdr->setName ("L_" + fn->getName());
 #endif
 	return labAdr;

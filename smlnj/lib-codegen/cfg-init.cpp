@@ -11,11 +11,6 @@
 
 #include "cfg.hpp"
 
-/* control the adding of symbolic names to some values for easier debugging */
-#ifndef _DEBUG
-#  define NO_NAMES
-#endif
-
 namespace CFG {
 
   /***** initialization for the `stm` type *****/
@@ -139,7 +134,7 @@ namespace CFG {
 
       // initialize the fragment's body */
 	this->_v_body->init (cxt, true);
-#ifndef NO_NAMES
+#ifndef NDEBUG
 	this->_v_body->bb()->setName ("L_" + std::to_string(this->_v_lab));
 #endif
 
