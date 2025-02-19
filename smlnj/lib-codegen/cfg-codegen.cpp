@@ -62,7 +62,7 @@ namespace CFG {
     llvm::Value *VAR::codegen (smlnj::cfgcg::Context *cxt)
     {
 	llvm::Value *v = cxt->lookupVal (this->_v_name);
-#ifdef _DEBUG
+#ifndef NDEBUG
 	if (v == nullptr) {
 	    llvm::dbgs() << "VAR: " << this->_v_name << " is unbound\n";
 	    assert (v && "unbound variable");
@@ -195,7 +195,31 @@ namespace CFG {
 	    fnTy = f->fn()->getFunctionType();
 	}
 
-      // evaluate the arguments
+#ifndef NDEBUG
+        // check that we do not exceed the maximum number of argument registers
+        int nGP = cxt->targetInfo()->numGPArgRegs;
+        int nFP = cxt->targetInfo()->numFPArgRegs;
+        for (auto ty : this->_v2) {
+            if (ty->isFLTt()) { --nFP; } else { --nGP; }
+        }
+        if ((nGP < 0) || (nFP < 0)) {
+	    llvm::dbgs() << "APPLY ";
+            if (lab == nullptr) {
+                auto f = reinterpret_cast<VAR *>(this->_v0);
+                llvm::dbgs() << "v" << f->get_name();
+            } else {
+                llvm::dbgs() << lab->get_name();
+            }
+            llvm::dbgs() << ": "
+                << (cxt->targetInfo()->numGPArgRegs - nGP) << "/"
+                << cxt->targetInfo()->numGPArgRegs << " GP args; "
+                << (cxt->targetInfo()->numFPArgRegs - nFP) << "/"
+                << cxt->targetInfo()->numFPArgRegs << " FP args\n";
+	    assert (false && "too many arguments");
+        }
+#endif
+
+        // evaluate the arguments
 	Args_t args = SetupStdArgs (cxt, fnTy, fk, this->_v1);
 
 	cxt->createJWACall(fnTy, fn, args);
@@ -220,6 +244,30 @@ namespace CFG {
 	    fn = f->fn();
 	    fnTy = f->fn()->getFunctionType();
 	}
+
+#ifndef NDEBUG
+        // check that we do not exceed the maximum number of argument registers
+        int nGP = cxt->targetInfo()->numGPArgRegs - 2; /* two unused registers */
+        int nFP = cxt->targetInfo()->numFPArgRegs;
+        for (auto ty : this->_v2) {
+            if (ty->isFLTt()) { --nFP; } else { --nGP; }
+        }
+        if ((nGP < 0) || (nFP < 0)) {
+	    llvm::dbgs() << "THROW ";
+            if (lab == nullptr) {
+                auto f = reinterpret_cast<VAR *>(this->_v0);
+                llvm::dbgs() << "v" << f->get_name();
+            } else {
+                llvm::dbgs() << lab->get_name();
+            }
+            llvm::dbgs() << ": "
+                << (cxt->targetInfo()->numGPArgRegs - 2 - nGP) << "/"
+                << (cxt->targetInfo()->numGPArgRegs - 2) << " GP args; "
+                << (cxt->targetInfo()->numFPArgRegs - nFP) << "/"
+                << cxt->targetInfo()->numFPArgRegs << " FP args\n";
+	    assert (false && "too many arguments");
+        }
+#endif
 
       // evaluate the arguments
 	Args_t args = SetupStdArgs (cxt, fnTy, frag_kind::STD_CONT, this->_v1);
