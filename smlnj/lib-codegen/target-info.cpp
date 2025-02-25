@@ -58,7 +58,7 @@ static TargetInfo Arm64Info = {
 	llvm::Triple::aarch64,          // LLVM architecture type
 	8, 64,				// word size in bytes and bits
 	22,				// numGPArgRegs
-	16,				// numFPArgRegs
+	32,				// numFPArgRegs
 	3,				// numCalleeSaves
 	true,				// hasPCRel
 	{ 0, 0, 0, 0, 0 },		// no memory registers
