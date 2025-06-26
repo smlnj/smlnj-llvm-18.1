@@ -262,7 +262,7 @@ namespace CFG_Prim {
                     args);
             case pureop::FCOPYSIGN:
                  return cxt->build().CreateCall(
-                    (this->get_sz() == 32) ? cxt->sqrt32() : cxt->sqrt64(),
+                    (this->get_sz() == 32) ? cxt->copysign32() : cxt->copysign64(),
                     args);
         } // switch
 
