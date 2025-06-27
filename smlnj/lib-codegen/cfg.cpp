@@ -46,6 +46,8 @@ namespace CTypes {
                 auto f0 = read_c_type_seq(is);
                 return C_UNION::make(f0);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "c_type");
         }
     }
     c_type::~c_type () { }
@@ -139,6 +141,8 @@ namespace CFG_Prim {
                 auto flen = asdl::read_int(is);
                 return RAW_ALLOC::make(fdesc, falign, flen);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "alloc");
         }
     }
     alloc::~alloc () { }
@@ -168,6 +172,8 @@ namespace CFG_Prim {
                 auto fto = asdl::read_int(is);
                 return FLOAT_TO_INT::make(fmode, ffrom, fto);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "arith");
         }
     }
     arith::~arith () { }
@@ -232,6 +238,8 @@ namespace CFG_Prim {
                 auto foffset = asdl::read_int(is);
                 return RAW_SELECT::make(fkind, fsz, foffset);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "pure");
         }
     }
     pure::~pure () { }
@@ -268,6 +276,8 @@ namespace CFG_Prim {
             return GET_HDLR::make();
           case _con_GET_VAR:
             return GET_VAR::make();
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "looker");
         }
     }
     looker::~looker () { }
@@ -305,6 +315,8 @@ namespace CFG_Prim {
             return SET_HDLR::make();
           case _con_SET_VAR:
             return SET_VAR::make();
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "setter");
         }
     }
     setter::~setter () { }
@@ -357,6 +369,8 @@ namespace CFG_Prim {
                 auto f0 = asdl::read_uint(is);
                 return LIMIT::make(f0);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "branch");
         }
     }
     branch::~branch () { }
@@ -388,6 +402,8 @@ namespace CFG {
                 auto fsz = asdl::read_int(is);
                 return FLTt::make(fsz);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "ty");
         }
     }
     ty::~ty () { }
@@ -439,6 +455,8 @@ namespace CFG {
                 auto farg = exp::read(is);
                 return SELECT::make(fidx, farg);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "exp");
         }
     }
     exp::~exp () { }
@@ -571,6 +589,8 @@ namespace CFG {
                 return RCC::make(freentrant, flinkage, fproto, fargs, fresults, flive,
                     fk);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "stm");
         }
     }
     stm::~stm () { }

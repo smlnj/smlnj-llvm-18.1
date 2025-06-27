@@ -14,9 +14,13 @@
 #include "config.h"
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <optional>
 #include <memory>
+#include <ios>
+#include <istream>
+#include <ostream>
 
 #include "asdl-stream.hpp"
 #include "asdl-integer.hpp"
@@ -26,10 +30,6 @@ namespace asdl {
 
   //! forward declarations of identifier classes
     class identifier;
-
-  //! exception for decoding error
-    class decode_exception {
-    };
 
   /***** functions *****/
 
@@ -170,7 +170,12 @@ namespace asdl {
     }
     inline bool read_bool (instream & is)
     {
-	return (read_tag8(is) != 1);
+        unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 1: return false;
+            case 2: return true;
+            default: is.invalidTag(tag, "bool");
+        }
     }
     inline unsigned int read_tag (instream & is)
     {
@@ -208,59 +213,60 @@ namespace asdl {
     }
     inline std::optional<int> read_int_option (instream & is)
     {
-	unsigned int v = read_tag8(is);
-	if (v == 0) {
-	    return std::optional<int>();
-	} else {
-	    return std::optional<int>(read_int(is));
-	}
+	unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 0: return std::optional<int>();
+            case 1: return std::optional<int>(read_int(is));
+            default: is.invalidTag(tag, "int?");
+        }
     }
     inline std::optional<unsigned int> read_uint_option (instream & is)
     {
-	unsigned int v = read_tag8(is);
-	if (v == 0) {
-	    return std::optional<unsigned int>();
-	} else {
-	    return std::optional<unsigned int>(read_uint(is));
-	}
+	unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 0: return std::optional<unsigned int>();
+            case 1: return std::optional<unsigned int>(read_uint(is));
+            default: is.invalidTag(tag, "uint?");
+        }
     }
     inline std::optional<bool> read_bool_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
-	if (v == 0) {
-	    return std::optional<bool>();
-	} else {
-	    return std::optional<bool>(v != 1);
-	}
+        switch (v) {
+            case 0: return std::optional<bool>();
+            case 1: return std::optional<bool>(false);
+            case 2: return std::optional<bool>(true);
+            default: is.invalidTag(v, "bool?");
+        }
     }
     inline std::optional<std::string> read_string_option (instream & is)
     {
-	unsigned int v = read_tag8(is);
-	if (v == 0) {
-	    return std::optional<std::string>();
-	} else {
-	    return std::optional<std::string>(read_string(is));
-	}
+	unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 0: return std::optional<std::string>();
+            case 1: return std::optional<std::string>(read_string(is));
+            default: is.invalidTag(tag, "string?");
+        }
     }
     inline std::optional<integer> read_integer_option (instream & is)
     {
-	unsigned int v = read_tag8(is);
-	if (v == 0) {
-	    return std::optional<integer>();
-	} else {
-	    return std::optional<integer>(read_integer(is));
-	}
+	unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 0: return std::optional<integer>();
+            case 1: return std::optional<integer>(read_integer(is));
+            default: is.invalidTag(tag, "integer?");
+        }
     }
   // generic unpickler for boxed options
     template <typename T>
     inline T *read_option (instream & is)
     {
-	unsigned int tag = is.getb ();
-	if (tag == 0) {
-	    return nullptr;
-	} else {
-	    return T::read (is);
-	}
+	unsigned int tag = read_tag8(is);
+        switch (tag) {
+            case 0: return nullptr;
+            case 1: return T::read (is);
+            default: is.invalidTag(tag, "option");
+        }
     }
   // generic pickler for enumeration sequences with fewer than 256 constructors
     template <typename T>
