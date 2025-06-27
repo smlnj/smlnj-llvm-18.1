@@ -4,7 +4,7 @@
  */
 
 /*
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
@@ -15,8 +15,8 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <memory>
-#include <cassert>
 
 #include "asdl-stream.hpp"
 #include "asdl-integer.hpp"
@@ -31,98 +31,10 @@ namespace asdl {
     class decode_exception {
     };
 
-  //! wrapper for immediate values
-    template <typename T>
-    class box {
-      public:
-	box (T v) : _v(v) { }
-	box (instream &is);
-	~box () { }
-	T value () const { return this->_v; }
-
-      private:
-	T _v;
-    };
-
-  //! optional values; the generic instance works for enums
-    template <typename T> class option {
-      public:
-	option () : _v(0) { }
-	option (T v) : _v(static_cast<unsigned int>(v)) { }
-	~option () { }
-	bool isEmpty () const { return (this->_v == 0); }
-	T valOf () const { return static_cast<T>(this->_v); }
-      private:
-	T _v;
-    };
-
-  //! optional int values
-    template <> class option <int> {
-      public:
-	option () : _isEmpty(true), _v(0) { }
-	option (int v) : _isEmpty(false), _v(v) { }
-	~option () { }
-	bool isEmpty () const { return this->_isEmpty; }
-	int valOf () const { return this->_v; }
-      private:
-	int _v;
-	bool _isEmpty;
-    };
-
-  //! optional unsigned int values
-    template <> class option <unsigned int> {
-      public:
-	option () : _isEmpty(true), _v(0) { }
-	option (unsigned int v) : _isEmpty(false), _v(v) { }
-	~option () { }
-	bool isEmpty () const { return this->_isEmpty; }
-	unsigned int valOf () const { return this->_v; }
-      private:
-	unsigned int _v;
-	bool _isEmpty;
-    };
-
-  //! optional pointer values
-    template <typename T> class option <T *> {
-      public:
-	option () : _v(nullptr) { }
-	option (T *v) : _v(v) { }
-	~option () { }
-	bool isEmpty () const { return (this->_v == nullptr); }
-	T valOf () const { return this->_v; }
-      private:
-	T *_v;
-    };
-
-  //! optional integer values
-    template <> class option <integer> {
-      public:
-	option () : _isEmpty(true), _v() { }
-	option (integer const &n) : _isEmpty(false), _v(n) { }
-	~option () { }
-	bool isEmpty () const { return this->_isEmpty; }
-	integer valOf () const { return this->_v; }
-      private:
-	integer _v;
-	bool _isEmpty;
-    };
-
-  //! optional string values
-    template <> class option <std::string> {
-      public:
-	option () : _isEmpty(true), _v("") { }
-	option (std::string const &s) : _isEmpty(false), _v(s) { }
-	~option () { }
-	bool isEmpty () const { return this->_isEmpty; }
-	std::string valOf () const { return this->_v; }
-      private:
-	std::string _v;
-	bool _isEmpty;
-    };
-
   /***** functions *****/
 
-  // encode basic values
+    /** encode basic values **/
+
     void write_int (outstream & os, int i);
     void write_uint (outstream & os, unsigned int ui);
     inline void write_tag8 (outstream & os, unsigned int ui)
@@ -139,48 +51,77 @@ namespace asdl {
     }
     void write_string (outstream & os, std::string const & s);
     void write_integer (outstream & os, integer const & i);
-  // encode optional basic values
-    inline void write_int_option (outstream & os, option<int> & optB)
+
+    /** encode optional basic values **/
+
+    //! optional singleton enum
+    inline void write_tag0_option (outstream & os, std::optional<unsigned int> const & optB)
     {
-	if (optB.isEmpty()) {
-	    write_tag8 (os, 0);
+	if (optB.has_value()) {
+	    write_tag8 (os, 1);
 	} else {
-	    write_int (os, optB.valOf());
+	    write_tag8 (os, 0);
 	}
     }
-    inline void write_uint_option (outstream & os, option<unsigned int> & optB)
+    inline void write_tag8_option (outstream & os, std::optional<unsigned int> const & optB)
     {
-	if (optB.isEmpty()) {
-	    write_tag8 (os, 0);
+	if (optB.has_value()) {
+	    write_tag8 (os, optB.value());
 	} else {
-	    write_uint (os, optB.valOf());
+	    write_tag8 (os, 0);
 	}
     }
-    inline void write_bool_option (outstream & os, option<bool> & optB)
+    inline void write_tag_option (outstream & os, std::optional<unsigned int> const & optB)
     {
-	if (optB.isEmpty()) {
-	    write_tag8 (os, 0);
+	if (optB.has_value()) {
+	    write_tag (os, optB.value());
 	} else {
-	    write_bool (os, optB.valOf());
+	    write_tag (os, 0);
 	}
     }
-    inline void write_integer_option (outstream & os, option<integer> & optB)
+    inline void write_int_option (outstream & os, std::optional<int> const & optB)
     {
-	if (optB.isEmpty()) {
-	    write_tag8 (os, 0);
+	if (optB.has_value()) {
+	    write_tag8 (os, 1);
+	    write_int (os, optB.value());
 	} else {
-	    write_integer (os, optB.valOf());
+	    write_tag8 (os, 0);
 	}
     }
-    inline void write_string_option (outstream & os, option<std::string> & optB)
+    inline void write_uint_option (outstream & os, std::optional<unsigned int> const & optB)
     {
-	if (optB.isEmpty()) {
-	    write_tag8 (os, 0);
+	if (optB.has_value()) {
+	    write_tag8 (os, 1);
+	    write_uint (os, optB.value());
 	} else {
-	    write_string (os, optB.valOf());
+	    write_tag8 (os, 0);
 	}
     }
-    void write_integer_option (outstream & os, option<integer> & optB);
+    inline void write_bool_option (outstream & os, std::optional<bool> const & optB)
+    {
+	if (optB.has_value()) {
+	    write_bool (os, optB.value());
+	} else {
+	    write_tag8 (os, 0);
+	}
+    }
+    inline void write_integer_option (outstream & os, std::optional<integer> const & optB)
+    {
+	if (optB.has_value()) {
+	    write_integer (os, optB.value());
+	} else {
+	    write_tag8 (os, 0);
+	}
+    }
+    inline void write_string_option (outstream & os, std::optional<std::string> const & optB)
+    {
+	if (optB.has_value()) {
+	    write_string (os, optB.value());
+	} else {
+	    write_tag8 (os, 0);
+	}
+    }
+    void write_integer_option (outstream & os, std::optional<integer> const & optB);
   // generic pickler for boxed options
     template <typename T>
     inline void write_option (outstream & os, T *v)
@@ -238,49 +179,76 @@ namespace asdl {
     std::string read_string (instream & is);
     integer read_integer (instream & is);
   // decode optional basic values
-    inline option<int> read_int_option (instream & is)
+    inline std::optional<unsigned int> read_tag0_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<int>();
+	    return std::optional<unsigned int>();
 	} else {
-	    return option<int>(read_int(is));
+	    return std::optional<unsigned int>(1);
 	}
     }
-    inline option<uint> read_uint_option (instream & is)
+    inline std::optional<unsigned int> read_tag8_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<uint>();
+	    return std::optional<unsigned int>();
 	} else {
-	    return option<uint>(read_uint(is));
+	    return std::optional<unsigned int>(v);
 	}
     }
-    inline option<bool> read_bool_option (instream & is)
+    inline std::optional<unsigned int> read_tag_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<bool>();
+	    return std::optional<unsigned int>();
 	} else {
-	    return option<bool>(v != 1);
+	    return std::optional<unsigned int>(v);
 	}
     }
-    inline option<std::string> read_string_option (instream & is)
+    inline std::optional<int> read_int_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<std::string>();
+	    return std::optional<int>();
 	} else {
-	    return option<std::string>(read_string(is));
+	    return std::optional<int>(read_int(is));
 	}
     }
-    inline option<integer> read_integer_option (instream & is)
+    inline std::optional<unsigned int> read_uint_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<integer>();
+	    return std::optional<unsigned int>();
 	} else {
-	    return option<integer>(read_integer(is));
+	    return std::optional<unsigned int>(read_uint(is));
+	}
+    }
+    inline std::optional<bool> read_bool_option (instream & is)
+    {
+	unsigned int v = read_tag8(is);
+	if (v == 0) {
+	    return std::optional<bool>();
+	} else {
+	    return std::optional<bool>(v != 1);
+	}
+    }
+    inline std::optional<std::string> read_string_option (instream & is)
+    {
+	unsigned int v = read_tag8(is);
+	if (v == 0) {
+	    return std::optional<std::string>();
+	} else {
+	    return std::optional<std::string>(read_string(is));
+	}
+    }
+    inline std::optional<integer> read_integer_option (instream & is)
+    {
+	unsigned int v = read_tag8(is);
+	if (v == 0) {
+	    return std::optional<integer>();
+	} else {
+	    return std::optional<integer>(read_integer(is));
 	}
     }
   // generic unpickler for boxed options

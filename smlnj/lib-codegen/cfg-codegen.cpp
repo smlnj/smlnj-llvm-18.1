@@ -121,14 +121,6 @@ namespace CFG {
 
     } // SELECT::codegen
 
-    llvm::Value *OFFSET::codegen (smlnj::cfgcg::Context *cxt)
-    {
-	return cxt->createGEP (
-	    cxt->asPtr(this->_v_arg->codegen(cxt)),
-	    static_cast<int32_t>(this->_v_idx));
-
-    } // OFFSET::codegen
-
   /***** code generation for the `stm` type *****/
 
     void LET::codegen (smlnj::cfgcg::Context *cxt)

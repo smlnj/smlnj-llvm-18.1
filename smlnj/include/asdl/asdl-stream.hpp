@@ -1,6 +1,6 @@
 /// \file asdl-stream.hpp
 ///
-/// \copyright 2024 The Fellowship of SML/NJ (https://smlnj.org)
+/// \copyright 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
 /// All rights reserved.
 ///
 /// \brief Defines the input and output stream types for ASDL picklers.
@@ -113,8 +113,7 @@ namespace asdl {
 	    }
 	}
 
-	char getc ()
-	{
+	char getc () {
 	    if (this->_is->good())
 		return this->_is->get();
 /* LLVM uses the -fno-exceptions flag, so this code doesn't compile */

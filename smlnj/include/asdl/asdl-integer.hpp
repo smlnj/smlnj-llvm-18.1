@@ -4,7 +4,7 @@
  */
 
 /*
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
@@ -27,7 +27,7 @@ namespace asdl {
 #if defined(ASDL_USE_GNU_MP)
 	integer () { mpz_init(this->_rep); }
 #else
-	integer () : _sign(false), _digits{} { }
+	integer () : _sign(false), _digits{0} { }
 #endif
 	integer (int32_t a);
 	integer (uint32_t a);

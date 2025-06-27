@@ -115,7 +115,7 @@ namespace CFG_Prim {
         int len = this->_v_len;  // length in bytes
         int align = this->_v_align; // alignment in bytes
 
-        if (! this->_v_desc.isEmpty()) {
+        if (this->_v_desc.has_value()) {
             if (align > cxt->wordSzInBytes()) {
               // adjust the allocation point to be one word before an aligned address
                 allocPtr = cxt->createIntToPtr(
@@ -124,7 +124,7 @@ namespace CFG_Prim {
                         cxt->uConst(align - cxt->wordSzInBytes())));
             }
           // write object descriptor
-            uint64_t desc = this->_v_desc.valOf().toUInt64();
+            uint64_t desc = this->_v_desc.value().toUInt64();
             cxt->createStoreML (cxt->uConst(desc), allocPtr);
         }
         else {
@@ -219,8 +219,7 @@ namespace CFG_Prim {
                 return cxt->createAdd(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
             case pureop::SUB:
                 return cxt->createSub(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
-            case pureop::SMUL:  // same as UMUL
-            case pureop::UMUL:
+            case pureop::MUL:
                 return cxt->createMul(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
             case pureop::SDIV:
                 return cxt->createSDiv(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
@@ -230,11 +229,11 @@ namespace CFG_Prim {
                 return cxt->createUDiv(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
             case pureop::UREM:
                 return cxt->createURem(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
-            case pureop::LSHIFT:
+            case pureop::SHL:
                 return cxt->createShl(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
-            case pureop::RSHIFT:
+            case pureop::ASHR:
                 return cxt->createAShr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
-            case pureop::RSHIFTL:
+            case pureop::LSHR:
                 return cxt->createLShr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
             case pureop::ORB:
                 return cxt->createOr(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
@@ -242,6 +241,21 @@ namespace CFG_Prim {
                 return cxt->createXor(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
             case pureop::ANDB:
                 return cxt->createAnd(cxt->asInt(sz, args[0]), cxt->asInt(sz, args[1]));
+            case pureop::CNTPOP:
+                 return cxt->build().CreateCall(
+                    (this->get_sz() == 32) ? cxt->ctpop32() : cxt->ctpop64(),
+                    args);
+            case pureop::CNTLZ:
+                 return cxt->build().CreateCall(
+                    (this->get_sz() == 32) ? cxt->ctlz32() : cxt->ctlz64(),
+                    args);
+            case pureop::CNTTZ:
+                 return cxt->build().CreateCall(
+                    (this->get_sz() == 32) ? cxt->cttz32() : cxt->cttz64(),
+                    args);
+            case pureop::ROTL:
+            case pureop::ROTR:
+                assert (false && "rotations unimplemented");
             case pureop::FADD:
                 return cxt->createFAdd(args[0], args[1]);
             case pureop::FSUB:
@@ -250,19 +264,25 @@ namespace CFG_Prim {
                 return cxt->createFMul(args[0], args[1]);
             case pureop::FDIV:
                 return cxt->createFDiv(args[0], args[1]);
+            case pureop::FREM:
+                return cxt->createFRem(args[0], args[1]);
+            case pureop::FMADD:
+                 return cxt->build().CreateCall(
+                    (this->get_sz() == 32) ? cxt->fma32() : cxt->fma64(),
+                    args);
             case pureop::FNEG:
                 return cxt->createFNeg(args[0]);
             case pureop::FABS:
                  return cxt->build().CreateCall(
                     (this->get_sz() == 32) ? cxt->fabs32() : cxt->fabs64(),
                     args);
-            case pureop::FSQRT:
-                 return cxt->build().CreateCall(
-                    (this->get_sz() == 32) ? cxt->sqrt32() : cxt->sqrt64(),
-                    args);
             case pureop::FCOPYSIGN:
                  return cxt->build().CreateCall(
                     (this->get_sz() == 32) ? cxt->copysign32() : cxt->copysign64(),
+                    args);
+            case pureop::FSQRT:
+                 return cxt->build().CreateCall(
+                    (this->get_sz() == 32) ? cxt->sqrt32() : cxt->sqrt64(),
                     args);
         } // switch
 
