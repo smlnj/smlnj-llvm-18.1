@@ -1,6 +1,6 @@
 ///! \file cfg-prim-codegen.cpp
 ///
-/// \copyright 2023 The Fellowship of SML/NJ (https://smlnj.org)
+/// \copyright 2025 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
 /// \brief This file holds the implementations of the `codegen` methods
@@ -115,7 +115,7 @@ namespace CFG_Prim {
         int len = this->_v_len;  // length in bytes
         int align = this->_v_align; // alignment in bytes
 
-        if (! this->_v_desc.isEmpty()) {
+        if (this->_v_desc.has_value()) {
             if (align > cxt->wordSzInBytes()) {
               // adjust the allocation point to be one word before an aligned address
                 allocPtr = cxt->createIntToPtr(
@@ -124,7 +124,7 @@ namespace CFG_Prim {
                         cxt->uConst(align - cxt->wordSzInBytes())));
             }
           // write object descriptor
-            uint64_t desc = this->_v_desc.valOf().toUInt64();
+            uint64_t desc = this->_v_desc.value().toUInt64();
             cxt->createStoreML (cxt->uConst(desc), allocPtr);
         }
         else {

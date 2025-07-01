@@ -461,96 +461,18 @@ class Context : public llvm::LLVMContext {
 
   // get intinsics; these are cached for the current module
     /// @{
-    llvm::Function *sadd32WOvflw () const
-    {
-        if (this->_sadd32WO == nullptr) {
-            this->_sadd32WO =
-                _getIntrinsic (llvm::Intrinsic::sadd_with_overflow, this->i32Ty);
-        }
-        return this->_sadd32WO;
-    }
-    llvm::Function *ssub32WOvflw () const
-    {
-        if (this->_ssub32WO == nullptr) {
-            this->_ssub32WO =
-                _getIntrinsic (llvm::Intrinsic::ssub_with_overflow, this->i32Ty);
-        }
-        return this->_ssub32WO;
-    }
-    llvm::Function *smul32WOvflw () const
-    {
-        if (this->_smul32WO == nullptr) {
-            this->_smul32WO =
-                _getIntrinsic (llvm::Intrinsic::smul_with_overflow, this->i32Ty);
-        }
-        return this->_smul32WO;
-    }
-    llvm::Function *sadd64WOvflw () const
-    {
-        if (this->_sadd64WO == nullptr) {
-            this->_sadd64WO =
-                _getIntrinsic (llvm::Intrinsic::sadd_with_overflow, this->i64Ty);
-        }
-        return this->_sadd64WO;
-    }
-    llvm::Function *ssub64WOvflw () const
-    {
-        if (this->_ssub64WO == nullptr) {
-            this->_ssub64WO =
-                _getIntrinsic (llvm::Intrinsic::ssub_with_overflow, this->i64Ty);
-        }
-        return this->_ssub64WO;
-    }
-    llvm::Function *smul64WOvflw () const
-    {
-        if (this->_smul64WO == nullptr) {
-            this->_smul64WO =
-                _getIntrinsic (llvm::Intrinsic::smul_with_overflow, this->i64Ty);
-        }
-        return this->_smul64WO;
-    }
-    llvm::Function *fabs32 () const
-    {
-        if (this->_fabs32 == nullptr) {
-            this->_fabs32 = _getIntrinsic (llvm::Intrinsic::fabs, this->f32Ty);
-        }
-        return this->_fabs32;
-    }
-    llvm::Function *fabs64 () const
-    {
-        if (this->_fabs64 == nullptr) {
-            this->_fabs64 = _getIntrinsic (llvm::Intrinsic::fabs, this->f64Ty);
-        }
-        return this->_fabs64;
-    }
-    llvm::Function *sqrt32 () const
-    {
-        if (this->_sqrt32 == nullptr) {
-            this->_sqrt32 = _getIntrinsic (llvm::Intrinsic::sqrt, this->f32Ty);
-        }
-        return this->_sqrt32;
-    }
-    llvm::Function *sqrt64 () const
-    {
-        if (this->_sqrt64 == nullptr) {
-            this->_sqrt64 = _getIntrinsic (llvm::Intrinsic::sqrt, this->f64Ty);
-        }
-        return this->_sqrt64;
-    }
-    llvm::Function *copysign32 () const
-    {
-        if (this->_copysign32 == nullptr) {
-            this->_copysign32 = _getIntrinsic (llvm::Intrinsic::copysign, this->f32Ty);
-        }
-        return this->_copysign32;
-    }
-    llvm::Function *copysign64 () const
-    {
-        if (this->_copysign64 == nullptr) {
-            this->_copysign64 = _getIntrinsic (llvm::Intrinsic::copysign, this->f64Ty);
-        }
-        return this->_copysign64;
-    }
+    llvm::Function *sadd32WOvflw () const { return this->_sadd32WO.get(this); }
+    llvm::Function *ssub32WOvflw () const { return this->_ssub32WO.get(this); }
+    llvm::Function *smul32WOvflw () const { return this->_smul32WO.get(this); }
+    llvm::Function *sadd64WOvflw () const { return this->_sadd64WO.get(this); }
+    llvm::Function *ssub64WOvflw () const { return this->_ssub64WO.get(this); }
+    llvm::Function *smul64WOvflw () const { return this->_smul64WO.get(this); }
+    llvm::Function *fabs32 () const { return this->_fabs32.get(this); }
+    llvm::Function *sqrt32 () const { return this->_sqrt32.get(this); }
+    llvm::Function *copysign32 () const { return this->_copysign32.get(this); }
+    llvm::Function *fabs64 () const { return this->_fabs64.get(this); }
+    llvm::Function *sqrt64 () const { return this->_sqrt64.get(this); }
+    llvm::Function *copysign64 () const { return this->_copysign64.get(this); }
     /// @}
 
   /***** shorthand for LLVM integer instructions (with argument coercions) *****/
@@ -656,6 +578,10 @@ class Context : public llvm::LLVMContext {
     llvm::Value *createFDiv (llvm::Value *a, llvm::Value *b)
     {
         return this->_builder.CreateFDiv (a, b);
+    }
+    llvm::Value *createFRem (llvm::Value *a, llvm::Value *b)
+    {
+        return this->_builder.CreateFRem (a, b);
     }
     llvm::Value *createFMul (llvm::Value *a, llvm::Value *b)
     {
@@ -839,19 +765,52 @@ class Context : public llvm::LLVMContext {
     /// target-machine properties
     int64_t _wordSzB;
 
+
+    /// the Intrinsic class implements lazy lookup of LLVM intrinsics with caching
+    class Intrinsic {
+    public:
+
+        /// constructor
+        explicit Intrinsic () : _ptr(nullptr) { }
+
+        /// initializer
+        void init (llvm::Intrinsic::ID id, llvm::Type *ty)
+        {
+            this->_id = id;
+            this->_ty = ty;
+        }
+
+        /// get the function pointer for the LLVM intrinsic
+        llvm::Function *get (const Context *cxt) const
+        {
+            if (this->_ptr == nullptr) {
+                this->_ptr = cxt->_getIntrinsic (this->_id, this->_ty);
+            }
+            return this->_ptr;
+        }
+
+        void reset () { this->_ptr = nullptr; }
+
+    private:
+        mutable llvm::Function *_ptr;   ///< the cached function pointer
+        llvm::Intrinsic::ID _id;        ///< the ID of the intrinsic
+        llvm::Type *_ty;                ///< the type of the intrinsic
+
+    }; // class Intrinsic
+
     // cached intrinsic functions
-    mutable llvm::Function *_sadd32WO;          // @llvm.sadd.with.overflow.i32
-    mutable llvm::Function *_ssub32WO;          // @llvm.ssub.with.overflow.i32
-    mutable llvm::Function *_smul32WO;          // @llvm.smul.with.overflow.i32
-    mutable llvm::Function *_sadd64WO;          // @llvm.sadd.with.overflow.i64
-    mutable llvm::Function *_ssub64WO;          // @llvm.ssub.with.overflow.i64
-    mutable llvm::Function *_smul64WO;          // @llvm.smul.with.overflow.i64
-    mutable llvm::Function *_fabs32;            // @llvm.fabs.f32
-    mutable llvm::Function *_fabs64;            // @llvm.fabs.f64
-    mutable llvm::Function *_sqrt32;            // @llvm.sqrt.f32
-    mutable llvm::Function *_sqrt64;            // @llvm.sqrt.f64
-    mutable llvm::Function *_copysign32;        // @llvm.copysign.f32
-    mutable llvm::Function *_copysign64;        // @llvm.copysign.f64
+    Intrinsic _sadd32WO;        // @llvm.sadd.with.overflow.i32
+    Intrinsic _ssub32WO;        // @llvm.ssub.with.overflow.i32
+    Intrinsic _smul32WO;        // @llvm.smul.with.overflow.i32
+    Intrinsic _sadd64WO;        // @llvm.sadd.with.overflow.i64
+    Intrinsic _ssub64WO;        // @llvm.ssub.with.overflow.i64
+    Intrinsic _smul64WO;        // @llvm.smul.with.overflow.i64
+    Intrinsic _fabs32;          // @llvm.fabs.f32
+    Intrinsic _sqrt32;          // @llvm.sqrt.f32
+    Intrinsic _copysign32;      // @llvm.copysign.f32
+    Intrinsic _fabs64;          // @llvm.fabs.f64
+    Intrinsic _sqrt64;          // @llvm.sqrt.f64
+    Intrinsic _copysign64;      // @llvm.copysign.f64
 
     /// cached @llvm.read_register + meta data to access stack
     llvm::Function *_readReg;

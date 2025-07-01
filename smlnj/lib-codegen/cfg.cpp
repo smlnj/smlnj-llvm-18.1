@@ -11,41 +11,43 @@ namespace CTypes {
         _tag_t tag = static_cast<_tag_t>(asdl::read_tag8(is));
         switch (tag) {
           case _con_C_void:
-            return new C_void;
+            return C_void::make();
           case _con_C_float:
-            return new C_float;
+            return C_float::make();
           case _con_C_double:
-            return new C_double;
+            return C_double::make();
           case _con_C_long_double:
-            return new C_long_double;
+            return C_long_double::make();
           case _con_C_unsigned:
             {
                 auto f0 = read_c_int(is);
-                return new C_unsigned(f0);
+                return C_unsigned::make(f0);
             }
           case _con_C_signed:
             {
                 auto f0 = read_c_int(is);
-                return new C_signed(f0);
+                return C_signed::make(f0);
             }
           case _con_C_PTR:
-            return new C_PTR;
+            return C_PTR::make();
           case _con_C_ARRAY:
             {
                 auto f0 = c_type::read(is);
                 auto f1 = asdl::read_int(is);
-                return new C_ARRAY(f0, f1);
+                return C_ARRAY::make(f0, f1);
             }
           case _con_C_STRUCT:
             {
                 auto f0 = read_c_type_seq(is);
-                return new C_STRUCT(f0);
+                return C_STRUCT::make(f0);
             }
           case _con_C_UNION:
             {
                 auto f0 = read_c_type_seq(is);
-                return new C_UNION(f0);
+                return C_UNION::make(f0);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "c_type");
         }
     }
     c_type::~c_type () { }
@@ -83,7 +85,7 @@ namespace CTypes {
         auto fconv = read_calling_convention(is);
         auto fretTy = c_type::read(is);
         auto fparamTys = read_c_type_seq(is);
-        return new c_proto(fconv, fretTy, fparamTys);
+        return c_proto::make(fconv, fretTy, fparamTys);
     }
     c_proto::~c_proto ()
     {
@@ -105,7 +107,7 @@ namespace CFG_Prim {
     {
         auto fkind = read_numkind(is);
         auto fsz = asdl::read_int(is);
-        return new raw_ty(fkind, fsz);
+        return raw_ty::make(fkind, fsz);
     }
     raw_ty::~raw_ty () { }
     // raw_ty_seq pickler suppressed
@@ -118,27 +120,29 @@ namespace CFG_Prim {
         _tag_t tag = static_cast<_tag_t>(asdl::read_tag8(is));
         switch (tag) {
           case _con_SPECIAL:
-            return new SPECIAL;
+            return SPECIAL::make();
           case _con_RECORD:
             {
                 auto fdesc = asdl::read_integer(is);
                 auto fmut = asdl::read_bool(is);
-                return new RECORD(fdesc, fmut);
+                return RECORD::make(fdesc, fmut);
             }
           case _con_RAW_RECORD:
             {
                 auto fdesc = asdl::read_integer(is);
                 auto falign = asdl::read_int(is);
                 auto ffields = read_raw_ty_seq(is);
-                return new RAW_RECORD(fdesc, falign, ffields);
+                return RAW_RECORD::make(fdesc, falign, ffields);
             }
           case _con_RAW_ALLOC:
             {
                 auto fdesc = asdl::read_integer_option(is);
                 auto falign = asdl::read_int(is);
                 auto flen = asdl::read_int(is);
-                return new RAW_ALLOC(fdesc, falign, flen);
+                return RAW_ALLOC::make(fdesc, falign, flen);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "alloc");
         }
     }
     alloc::~alloc () { }
@@ -159,15 +163,17 @@ namespace CFG_Prim {
             {
                 auto foper = read_arithop(is);
                 auto fsz = asdl::read_int(is);
-                return new ARITH(foper, fsz);
+                return ARITH::make(foper, fsz);
             }
           case _con_FLOAT_TO_INT:
             {
                 auto fmode = read_rounding_mode(is);
                 auto ffrom = asdl::read_int(is);
                 auto fto = asdl::read_int(is);
-                return new FLOAT_TO_INT(fmode, ffrom, fto);
+                return FLOAT_TO_INT::make(fmode, ffrom, fto);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "arith");
         }
     }
     arith::~arith () { }
@@ -186,52 +192,54 @@ namespace CFG_Prim {
             {
                 auto foper = read_pureop(is);
                 auto fsz = asdl::read_int(is);
-                return new PURE_ARITH(foper, fsz);
+                return PURE_ARITH::make(foper, fsz);
             }
           case _con_EXTEND:
             {
                 auto fsigned = asdl::read_bool(is);
                 auto ffrom = asdl::read_int(is);
                 auto fto = asdl::read_int(is);
-                return new EXTEND(fsigned, ffrom, fto);
+                return EXTEND::make(fsigned, ffrom, fto);
             }
           case _con_TRUNC:
             {
                 auto ffrom = asdl::read_int(is);
                 auto fto = asdl::read_int(is);
-                return new TRUNC(ffrom, fto);
+                return TRUNC::make(ffrom, fto);
             }
           case _con_INT_TO_FLOAT:
             {
                 auto ffrom = asdl::read_int(is);
                 auto fto = asdl::read_int(is);
-                return new INT_TO_FLOAT(ffrom, fto);
+                return INT_TO_FLOAT::make(ffrom, fto);
             }
           case _con_FLOAT_TO_BITS:
             {
                 auto fsz = asdl::read_int(is);
-                return new FLOAT_TO_BITS(fsz);
+                return FLOAT_TO_BITS::make(fsz);
             }
           case _con_BITS_TO_FLOAT:
             {
                 auto fsz = asdl::read_int(is);
-                return new BITS_TO_FLOAT(fsz);
+                return BITS_TO_FLOAT::make(fsz);
             }
           case _con_PURE_SUBSCRIPT:
-            return new PURE_SUBSCRIPT;
+            return PURE_SUBSCRIPT::make();
           case _con_PURE_RAW_SUBSCRIPT:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
-                return new PURE_RAW_SUBSCRIPT(fkind, fsz);
+                return PURE_RAW_SUBSCRIPT::make(fkind, fsz);
             }
           case _con_RAW_SELECT:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
                 auto foffset = asdl::read_int(is);
-                return new RAW_SELECT(fkind, fsz, foffset);
+                return RAW_SELECT::make(fkind, fsz, foffset);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "pure");
         }
     }
     pure::~pure () { }
@@ -249,25 +257,27 @@ namespace CFG_Prim {
         _tag_t tag = static_cast<_tag_t>(asdl::read_tag8(is));
         switch (tag) {
           case _con_DEREF:
-            return new DEREF;
+            return DEREF::make();
           case _con_SUBSCRIPT:
-            return new SUBSCRIPT;
+            return SUBSCRIPT::make();
           case _con_RAW_SUBSCRIPT:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
-                return new RAW_SUBSCRIPT(fkind, fsz);
+                return RAW_SUBSCRIPT::make(fkind, fsz);
             }
           case _con_RAW_LOAD:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
-                return new RAW_LOAD(fkind, fsz);
+                return RAW_LOAD::make(fkind, fsz);
             }
           case _con_GET_HDLR:
-            return new GET_HDLR;
+            return GET_HDLR::make();
           case _con_GET_VAR:
-            return new GET_VAR;
+            return GET_VAR::make();
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "looker");
         }
     }
     looker::~looker () { }
@@ -282,29 +292,31 @@ namespace CFG_Prim {
         _tag_t tag = static_cast<_tag_t>(asdl::read_tag8(is));
         switch (tag) {
           case _con_UNBOXED_UPDATE:
-            return new UNBOXED_UPDATE;
+            return UNBOXED_UPDATE::make();
           case _con_UPDATE:
-            return new UPDATE;
+            return UPDATE::make();
           case _con_UNBOXED_ASSIGN:
-            return new UNBOXED_ASSIGN;
+            return UNBOXED_ASSIGN::make();
           case _con_ASSIGN:
-            return new ASSIGN;
+            return ASSIGN::make();
           case _con_RAW_UPDATE:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
-                return new RAW_UPDATE(fkind, fsz);
+                return RAW_UPDATE::make(fkind, fsz);
             }
           case _con_RAW_STORE:
             {
                 auto fkind = read_numkind(is);
                 auto fsz = asdl::read_int(is);
-                return new RAW_STORE(fkind, fsz);
+                return RAW_STORE::make(fkind, fsz);
             }
           case _con_SET_HDLR:
-            return new SET_HDLR;
+            return SET_HDLR::make();
           case _con_SET_VAR:
-            return new SET_VAR;
+            return SET_VAR::make();
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "setter");
         }
     }
     setter::~setter () { }
@@ -335,28 +347,30 @@ namespace CFG_Prim {
                 auto foper = read_cmpop(is);
                 auto fsigned = asdl::read_bool(is);
                 auto fsz = asdl::read_int(is);
-                return new CMP(foper, fsigned, fsz);
+                return CMP::make(foper, fsigned, fsz);
             }
           case _con_FCMP:
             {
                 auto foper = read_fcmpop(is);
                 auto fsz = asdl::read_int(is);
-                return new FCMP(foper, fsz);
+                return FCMP::make(foper, fsz);
             }
           case _con_FSGN:
             {
                 auto f0 = asdl::read_int(is);
-                return new FSGN(f0);
+                return FSGN::make(f0);
             }
           case _con_PEQL:
-            return new PEQL;
+            return PEQL::make();
           case _con_PNEQ:
-            return new PNEQ;
+            return PNEQ::make();
           case _con_LIMIT:
             {
                 auto f0 = asdl::read_uint(is);
-                return new LIMIT(f0);
+                return LIMIT::make(f0);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "branch");
         }
     }
     branch::~branch () { }
@@ -373,21 +387,23 @@ namespace CFG {
         _tag_t tag = static_cast<_tag_t>(asdl::read_tag8(is));
         switch (tag) {
           case _con_LABt:
-            return new LABt;
+            return LABt::make();
           case _con_PTRt:
-            return new PTRt;
+            return PTRt::make();
           case _con_TAGt:
-            return new TAGt;
+            return TAGt::make();
           case _con_NUMt:
             {
                 auto fsz = asdl::read_int(is);
-                return new NUMt(fsz);
+                return NUMt::make(fsz);
             }
           case _con_FLTt:
             {
                 auto fsz = asdl::read_int(is);
-                return new FLTt(fsz);
+                return FLTt::make(fsz);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "ty");
         }
     }
     ty::~ty () { }
@@ -408,43 +424,45 @@ namespace CFG {
           case _con_VAR:
             {
                 auto fname = LambdaVar::read_lvar(is);
-                return new VAR(fname);
+                return VAR::make(fname);
             }
           case _con_LABEL:
             {
                 auto fname = LambdaVar::read_lvar(is);
-                return new LABEL(fname);
+                return LABEL::make(fname);
             }
           case _con_NUM:
             {
                 auto fiv = asdl::read_integer(is);
                 auto fsz = asdl::read_int(is);
-                return new NUM(fiv, fsz);
+                return NUM::make(fiv, fsz);
             }
           case _con_LOOKER:
             {
                 auto foper = CFG_Prim::looker::read(is);
                 auto fargs = read_exp_seq(is);
-                return new LOOKER(foper, fargs);
+                return LOOKER::make(foper, fargs);
             }
           case _con_PURE:
             {
                 auto foper = CFG_Prim::pure::read(is);
                 auto fargs = read_exp_seq(is);
-                return new PURE(foper, fargs);
+                return PURE::make(foper, fargs);
             }
           case _con_SELECT:
             {
                 auto fidx = asdl::read_int(is);
                 auto farg = exp::read(is);
-                return new SELECT(fidx, farg);
+                return SELECT::make(fidx, farg);
             }
           case _con_OFFSET:
             {
                 auto fidx = asdl::read_int(is);
                 auto farg = exp::read(is);
-                return new OFFSET(fidx, farg);
+                return OFFSET::make(fidx, farg);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "exp");
         }
     }
     exp::~exp () { }
@@ -476,7 +494,7 @@ namespace CFG {
     {
         auto fname = LambdaVar::read_lvar(is);
         auto fty = ty::read(is);
-        return new param(fname, fty);
+        return param::make(fname, fty);
     }
     param::~param ()
     {
@@ -502,7 +520,7 @@ namespace CFG {
                 auto f0 = exp::read(is);
                 auto f1 = param::read(is);
                 auto f2 = stm::read(is);
-                return new LET(f0, f1, f2);
+                return LET::make(f0, f1, f2);
             }
           case _con_ALLOC:
             {
@@ -510,33 +528,33 @@ namespace CFG {
                 auto f1 = read_exp_seq(is);
                 auto f2 = LambdaVar::read_lvar(is);
                 auto f3 = stm::read(is);
-                return new ALLOC(f0, f1, f2, f3);
+                return ALLOC::make(f0, f1, f2, f3);
             }
           case _con_APPLY:
             {
                 auto f0 = exp::read(is);
                 auto f1 = read_exp_seq(is);
                 auto f2 = read_ty_seq(is);
-                return new APPLY(f0, f1, f2);
+                return APPLY::make(f0, f1, f2);
             }
           case _con_THROW:
             {
                 auto f0 = exp::read(is);
                 auto f1 = read_exp_seq(is);
                 auto f2 = read_ty_seq(is);
-                return new THROW(f0, f1, f2);
+                return THROW::make(f0, f1, f2);
             }
           case _con_GOTO:
             {
                 auto f0 = LambdaVar::read_lvar(is);
                 auto f1 = read_exp_seq(is);
-                return new GOTO(f0, f1);
+                return GOTO::make(f0, f1);
             }
           case _con_SWITCH:
             {
                 auto f0 = exp::read(is);
                 auto f1 = read_stm_seq(is);
-                return new SWITCH(f0, f1);
+                return SWITCH::make(f0, f1);
             }
           case _con_BRANCH:
             {
@@ -545,7 +563,7 @@ namespace CFG {
                 auto f2 = read_probability(is);
                 auto f3 = stm::read(is);
                 auto f4 = stm::read(is);
-                return new BRANCH(f0, f1, f2, f3, f4);
+                return BRANCH::make(f0, f1, f2, f3, f4);
             }
           case _con_ARITH:
             {
@@ -553,21 +571,21 @@ namespace CFG {
                 auto f1 = read_exp_seq(is);
                 auto f2 = param::read(is);
                 auto f3 = stm::read(is);
-                return new ARITH(f0, f1, f2, f3);
+                return ARITH::make(f0, f1, f2, f3);
             }
           case _con_SETTER:
             {
                 auto f0 = CFG_Prim::setter::read(is);
                 auto f1 = read_exp_seq(is);
                 auto f2 = stm::read(is);
-                return new SETTER(f0, f1, f2);
+                return SETTER::make(f0, f1, f2);
             }
           case _con_CALLGC:
             {
                 auto f0 = read_exp_seq(is);
                 auto f1 = LambdaVar::read_lvar_seq(is);
                 auto f2 = stm::read(is);
-                return new CALLGC(f0, f1, f2);
+                return CALLGC::make(f0, f1, f2);
             }
           case _con_RCC:
             {
@@ -578,8 +596,11 @@ namespace CFG {
                 auto fresults = read_param_seq(is);
                 auto flive = read_param_seq(is);
                 auto fk = stm::read(is);
-                return new RCC(freentrant, flinkage, fproto, fargs, fresults, flive, fk);
+                return RCC::make(freentrant, flinkage, fproto, fargs, fresults, flive,
+                    fk);
             }
+          default:
+            is.invalidTag(static_cast<unsigned int>(tag), "stm");
         }
     }
     stm::~stm () { }
@@ -649,7 +670,7 @@ namespace CFG {
         auto flab = LambdaVar::read_lvar(is);
         auto fparams = read_param_seq(is);
         auto fbody = stm::read(is);
-        return new frag(fkind, flab, fparams, fbody);
+        return frag::make(fkind, flab, fparams, fbody);
     }
     frag::~frag ()
     {
@@ -666,14 +687,14 @@ namespace CFG {
         auto fneedsBasePtr = asdl::read_bool(is);
         auto fhasTrapArith = asdl::read_bool(is);
         auto fhasRCC = asdl::read_bool(is);
-        return new attrs(falignHP, fneedsBasePtr, fhasTrapArith, fhasRCC);
+        return attrs::make(falignHP, fneedsBasePtr, fhasTrapArith, fhasRCC);
     }
     attrs::~attrs () { }
     cluster * cluster::read (asdl::instream & is)
     {
         auto fattrs = attrs::read(is);
         auto ffrags = read_frag_seq(is);
-        return new cluster(fattrs, ffrags);
+        return cluster::make(fattrs, ffrags);
     }
     cluster::~cluster ()
     {
@@ -689,7 +710,7 @@ namespace CFG {
         auto fsrcFile = asdl::read_string(is);
         auto fentry = cluster::read(is);
         auto ffns = read_cluster_seq(is);
-        return new comp_unit(fsrcFile, fentry, ffns);
+        return comp_unit::make(fsrcFile, fentry, ffns);
     }
     comp_unit::~comp_unit ()
     {
