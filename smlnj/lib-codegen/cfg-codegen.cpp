@@ -117,7 +117,7 @@ namespace CFG {
 	llvm::Value *adr = cxt->createGEP (
 	    cxt->asPtr(this->_v_arg->codegen(cxt)),
 	    static_cast<int32_t>(this->_v_idx));
-	return cxt->createLoad (cxt->mlValueTy, adr);
+	return cxt->setInvarianteLoadMD (cxt->createLoad (cxt->mlValueTy, adr));
 
     } // SELECT::codegen
 

@@ -603,15 +603,25 @@ class Context : public llvm::LLVMContext {
 
   /***** shorthand for load/store instructions *****/
     /// @{
-    llvm::Value *createLoad (llvm::Type *ty, llvm::Value *adr, unsigned align)
+    llvm::LoadInst *createLoad (llvm::Type *ty, llvm::Value *adr, unsigned align)
     {
       // NOTE: our loads are always aligned to the ABI alignment requirement
         return this->_builder.CreateAlignedLoad (ty, adr, llvm::MaybeAlign(align));
     }
-    llvm::Value *createLoad (llvm::Type *ty, llvm::Value *adr)
+    llvm::LoadInst *createLoad (llvm::Type *ty, llvm::Value *adr)
     {
       // NOTE: our loads are always aligned to the ABI alignment requirement
         return this->_builder.CreateAlignedLoad (ty, adr, llvm::MaybeAlign(0));
+    }
+
+/// get the `invariant.load` metadata for load instructions
+    llvm::LoadInst *setInvarianteLoadMD (llvm::LoadInst *insn)
+    {
+// llvm::LLVMContext::MD_invariant_load
+        // empty metadata node
+        auto emptyMD = llvm::MDTuple::get(*this, {});
+        insn->setMetadata (llvm::LLVMContext::MD_invariant_load, emptyMD);
+        return insn;
     }
 
     /// create a store of a ML value
