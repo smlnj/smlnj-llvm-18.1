@@ -319,7 +319,7 @@ namespace CFG_Prim {
         static alloc * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
-    
+
       protected:
         enum _tag_t {_con_SPECIAL = 1, _con_RECORD, _con_RAW_RECORD, _con_RAW_ALLOC};
         alloc (_tag_t tag)
@@ -469,7 +469,7 @@ namespace CFG_Prim {
         static arith * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
-    
+
       protected:
         enum _tag_t {_con_ARITH = 1, _con_FLOAT_TO_INT};
         arith (_tag_t tag)
@@ -592,7 +592,7 @@ namespace CFG_Prim {
         static pure * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
-    
+
       protected:
         enum _tag_t {
             _con_PURE_ARITH = 1,
@@ -895,7 +895,7 @@ namespace CFG_Prim {
         static looker * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
-    
+
       protected:
         enum _tag_t {
             _con_DEREF = 1,
@@ -1223,7 +1223,7 @@ namespace CFG_Prim {
         static branch * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 
-    
+
       protected:
         enum _tag_t {_con_CMP = 1, _con_FCMP, _con_FSGN, _con_PEQL, _con_PNEQ, _con_LIMIT
         };
@@ -1398,10 +1398,10 @@ namespace CFG {
         // pickler method suppressed
         static ty * read (asdl::instream & is);
         virtual llvm::Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isNUMt () { return this->_tag == _con_NUMt; }
-	bool isFLTt () { return this->_tag == _con_FLTt; }
+        bool isNUMt () { return this->_tag == _con_NUMt; }
+        bool isFLTt () { return this->_tag == _con_FLTt; }
 
-    
+
       protected:
         enum _tag_t {_con_LABt = 1, _con_PTRt, _con_TAGt, _con_NUMt, _con_FLTt};
         ty (_tag_t tag)
@@ -1504,9 +1504,9 @@ namespace CFG {
         // pickler method suppressed
         static exp * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isLABEL () { return (this->_tag == _con_LABEL); }
+        bool isLABEL () { return (this->_tag == _con_LABEL); }
 
-    
+
       protected:
         enum _tag_t {
             _con_VAR = 1,
@@ -1733,7 +1733,7 @@ namespace CFG {
         }
         void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { cxt->insertVal (this->_v_name, v); }
 
-    
+
       private:
         LambdaVar::lvar _v_name;
         ty * _v_ty;
@@ -1750,7 +1750,7 @@ namespace CFG {
         virtual void codegen (smlnj::cfgcg::Context *cxt) = 0;
         llvm::BasicBlock *bb () { return this->_bb; }
 
-    
+
       protected:
         enum _tag_t {
             _con_LET = 1,
@@ -1770,7 +1770,7 @@ namespace CFG {
         { }
         _tag_t _tag;
         llvm::BasicBlock *_bb;  // for the first stm in a block
-	void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
 
     };
     class LET : public stm {
@@ -1811,7 +1811,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         exp * _v0;
         param * _v1;
@@ -1863,7 +1863,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         CFG_Prim::alloc * _v0;
         std::vector<exp *> _v1;
@@ -1908,7 +1908,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         exp * _v0;
         std::vector<exp *> _v1;
@@ -1952,7 +1952,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         exp * _v0;
         std::vector<exp *> _v1;
@@ -1988,7 +1988,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         LambdaVar::lvar _v0;
         std::vector<exp *> _v1;
@@ -2023,7 +2023,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         exp * _v0;
         std::vector<stm *> _v1;
@@ -2082,7 +2082,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         CFG_Prim::branch * _v0;
         std::vector<exp *> _v1;
@@ -2136,7 +2136,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         CFG_Prim::arith * _v0;
         std::vector<exp *> _v1;
@@ -2181,7 +2181,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         CFG_Prim::setter * _v0;
         std::vector<exp *> _v1;
@@ -2225,7 +2225,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         std::vector<exp *> _v0;
         std::vector<LambdaVar::lvar> _v1;
@@ -2304,7 +2304,7 @@ namespace CFG {
         void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
         void codegen (smlnj::cfgcg::Context *cxt);
 
-    
+
       private:
         bool _v_reentrant;
         std::string _v_linkage;
@@ -2365,14 +2365,14 @@ namespace CFG {
         }
         void init (smlnj::cfgcg::Context *cxt);
         void codegen (smlnj::cfgcg::Context *cxt, cluster *cluster);
-	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
-	llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
-	void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
-	{
-	    this->_phiNodes[i]->addIncoming(v, bblk);
-	}
+        llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
+        llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
+        void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
+        {
+            this->_phiNodes[i]->addIncoming(v, bblk);
+        }
 
-    
+
       private:
         frag_kind _v_kind;
         LambdaVar::lvar _v_lab;
@@ -2464,10 +2464,10 @@ namespace CFG {
         }
         void init (smlnj::cfgcg::Context *cxt, bool isFirst);
         void codegen (smlnj::cfgcg::Context *cxt, bool isFirst);
-	llvm::Function *fn () const { return this->_fn; }
-	frag *entry () const { return this->_v_frags[0]; }
+        llvm::Function *fn () const { return this->_fn; }
+        frag *entry () const { return this->_v_frags[0]; }
 
-    
+
       private:
         attrs * _v_attrs;
         std::vector<frag *> _v_frags;
