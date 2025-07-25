@@ -1,4 +1,4 @@
-/* src/lib/cxx/include/asdl/config.h.  Generated from config_h.in by configure.  */
+/* src/lib/cpp/include/asdl/config.h.  Generated from config_h.in by configure.  */
 /* config/config_h.in.  Generated from configure.ac by autoheader.  */
 
 

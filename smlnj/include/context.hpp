@@ -467,9 +467,21 @@ class Context : public llvm::LLVMContext {
     llvm::Function *sadd64WOvflw () const { return this->_sadd64WO.get(this); }
     llvm::Function *ssub64WOvflw () const { return this->_ssub64WO.get(this); }
     llvm::Function *smul64WOvflw () const { return this->_smul64WO.get(this); }
+    llvm::Function *ctlz32 () const { return this->_ctlz32.get(this); }
+    llvm::Function *ctpop32 () const { return this->_ctpop32.get(this); }
+    llvm::Function *cttz32 () const { return this->_cttz32.get(this); }
+    llvm::Function *ctlz64 () const { return this->_ctlz64.get(this); }
+    llvm::Function *ctpop64 () const { return this->_ctpop64.get(this); }
+    llvm::Function *cttz64 () const { return this->_cttz64.get(this); }
+    llvm::Function *fshl32 () const { return this->_fshl32.get(this); }
+    llvm::Function *fshr32 () const { return this->_fshr32.get(this); }
+    llvm::Function *fshl64 () const { return this->_fshl64.get(this); }
+    llvm::Function *fshr64 () const { return this->_fshr64.get(this); }
+    llvm::Function *fma32 () const { return this->_fma32.get(this); }
     llvm::Function *fabs32 () const { return this->_fabs32.get(this); }
     llvm::Function *sqrt32 () const { return this->_sqrt32.get(this); }
     llvm::Function *copysign32 () const { return this->_copysign32.get(this); }
+    llvm::Function *fma64 () const { return this->_fma64.get(this); }
     llvm::Function *fabs64 () const { return this->_fabs64.get(this); }
     llvm::Function *sqrt64 () const { return this->_sqrt64.get(this); }
     llvm::Function *copysign64 () const { return this->_copysign64.get(this); }
@@ -815,9 +827,21 @@ class Context : public llvm::LLVMContext {
     Intrinsic _sadd64WO;        // @llvm.sadd.with.overflow.i64
     Intrinsic _ssub64WO;        // @llvm.ssub.with.overflow.i64
     Intrinsic _smul64WO;        // @llvm.smul.with.overflow.i64
+    Intrinsic _ctlz32;          // @llvm.ctlz.i32
+    Intrinsic _ctpop32;         // @llvm.ctpop.i32
+    Intrinsic _cttz32;          // @llvm.cttz.i32
+    Intrinsic _ctlz64;          // @llvm.ctlz.i64
+    Intrinsic _ctpop64;         // @llvm.ctpop.i64
+    Intrinsic _cttz64;          // @llvm.cttz.i64
+    Intrinsic _fshl32;          // @llvm.fshl.i32
+    Intrinsic _fshr32;          // @llvm.fshr.i32
+    Intrinsic _fshl64;          // @llvm.fshl.i64
+    Intrinsic _fshr64;          // @llvm.fshr.i64
+    Intrinsic _fma32;           // @llvm.fma.f32
     Intrinsic _fabs32;          // @llvm.fabs.f32
     Intrinsic _sqrt32;          // @llvm.sqrt.f32
     Intrinsic _copysign32;      // @llvm.copysign.f32
+    Intrinsic _fma64;           // @llvm.fma.f64
     Intrinsic _fabs64;          // @llvm.fabs.f64
     Intrinsic _sqrt64;          // @llvm.sqrt.f64
     Intrinsic _copysign64;      // @llvm.copysign.f64

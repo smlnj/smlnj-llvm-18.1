@@ -556,26 +556,32 @@ namespace CFG_Prim {
     enum class pureop {
         ADD = 1,
         SUB,
-        SMUL,
+        MUL,
         SDIV,
         SREM,
-        UMUL,
         UDIV,
         UREM,
-        LSHIFT,
-        RSHIFT,
-        RSHIFTL,
+        SHL,
+        ASHR,
+        LSHR,
         ORB,
         XORB,
         ANDB,
+        CNTPOP,
+        CNTLZ,
+        CNTTZ,
+        ROTL,
+        ROTR,
         FADD,
         FSUB,
         FMUL,
         FDIV,
+        FREM,
+        FMADD,
         FNEG,
         FABS,
-        FSQRT,
-        FCOPYSIGN
+        FCOPYSIGN,
+        FSQRT
     };
     // pickler suppressed for pureop
     pureop read_pureop (asdl::instream & is);
@@ -1392,8 +1398,8 @@ namespace CFG {
         // pickler method suppressed
         static ty * read (asdl::instream & is);
         virtual llvm::Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isNUMt () { return this->_tag == _con_NUMt; }
-	bool isFLTt () { return this->_tag == _con_FLTt; }
+        bool isNUMt () { return this->_tag == _con_NUMt; }
+        bool isFLTt () { return this->_tag == _con_FLTt; }
 
 
       protected:
@@ -1498,7 +1504,7 @@ namespace CFG {
         // pickler method suppressed
         static exp * read (asdl::instream & is);
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isLABEL () { return (this->_tag == _con_LABEL); }
+        bool isLABEL () { return (this->_tag == _con_LABEL); }
 
 
       protected:
@@ -1508,8 +1514,7 @@ namespace CFG {
             _con_NUM,
             _con_LOOKER,
             _con_PURE,
-            _con_SELECT,
-            _con_OFFSET
+            _con_SELECT
         };
         exp (_tag_t tag)
           : _tag(tag)
@@ -1696,39 +1701,6 @@ namespace CFG {
         int _v_idx;
         exp * _v_arg;
     };
-    class OFFSET : public exp {
-      public:
-        OFFSET (int p_idx, exp * p_arg)
-          : exp(exp::_con_OFFSET), _v_idx(p_idx), _v_arg(p_arg)
-        { }
-        ~OFFSET ();
-        static OFFSET * make (int p_idx, exp * p_arg)
-        {
-            return new OFFSET(p_idx, p_arg);
-        }
-        // pickler method suppressed
-        int get_idx () const
-        {
-            return this->_v_idx;
-        }
-        void set_idx (int v)
-        {
-            this->_v_idx = v;
-        }
-        exp * get_arg () const
-        {
-            return this->_v_arg;
-        }
-        void set_arg (exp * v)
-        {
-            this->_v_arg = v;
-        }
-        llvm::Value *codegen (smlnj::cfgcg::Context *cxt);
-
-      private:
-        int _v_idx;
-        exp * _v_arg;
-    };
     // exp_seq pickler suppressed
     std::vector<exp *> read_exp_seq (asdl::instream & is);
     class param {
@@ -1798,7 +1770,7 @@ namespace CFG {
         { }
         _tag_t _tag;
         llvm::BasicBlock *_bb;  // for the first stm in a block
-	void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
 
     };
     class LET : public stm {
@@ -2393,12 +2365,12 @@ namespace CFG {
         }
         void init (smlnj::cfgcg::Context *cxt);
         void codegen (smlnj::cfgcg::Context *cxt, cluster *cluster);
-	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
-	llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
-	void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
-	{
-	    this->_phiNodes[i]->addIncoming(v, bblk);
-	}
+        llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
+        llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
+        void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
+        {
+            this->_phiNodes[i]->addIncoming(v, bblk);
+        }
 
 
       private:
@@ -2492,8 +2464,8 @@ namespace CFG {
         }
         void init (smlnj::cfgcg::Context *cxt, bool isFirst);
         void codegen (smlnj::cfgcg::Context *cxt, bool isFirst);
-	llvm::Function *fn () const { return this->_fn; }
-	frag *entry () const { return this->_v_frags[0]; }
+        llvm::Function *fn () const { return this->_fn; }
+        frag *entry () const { return this->_v_frags[0]; }
 
 
       private:

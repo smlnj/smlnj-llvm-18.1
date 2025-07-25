@@ -455,12 +455,6 @@ namespace CFG {
                 auto farg = exp::read(is);
                 return SELECT::make(fidx, farg);
             }
-          case _con_OFFSET:
-            {
-                auto fidx = asdl::read_int(is);
-                auto farg = exp::read(is);
-                return OFFSET::make(fidx, farg);
-            }
           default:
             is.invalidTag(static_cast<unsigned int>(tag), "exp");
         }
@@ -478,10 +472,6 @@ namespace CFG {
         delete this->_v_oper;
     }
     SELECT::~SELECT ()
-    {
-        delete this->_v_arg;
-    }
-    OFFSET::~OFFSET ()
     {
         delete this->_v_arg;
     }
