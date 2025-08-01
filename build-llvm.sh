@@ -53,7 +53,9 @@ SANITIZE_ADDRESS=no
 NPROCS=2
 GENERATOR="make"
 
-# default place to put the headers, libraries, and tools
+# default place to put the headers, libraries, and tools.
+# we expect this to be overridden when building LLVM as part
+# of the SML/NJ system
 #
 INSTALL_PREFIX="$LLVMDIR"
 

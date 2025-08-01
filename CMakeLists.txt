@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-# LLVM 18.1 only requires 3.23, but we require a more recent version
+# LLVM 18.1 requires 3.20, but we require a more recent version
 #
 cmake_minimum_required(VERSION 3.23.0)
 
