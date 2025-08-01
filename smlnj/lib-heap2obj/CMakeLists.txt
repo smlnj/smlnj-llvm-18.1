@@ -18,4 +18,5 @@ target_include_directories(Heap2Obj PRIVATE
   ${SMLNJ_LLVM_BINARY_DIR}/llvm/include
   ${SMLNJ_LLVM_SOURCE_DIR}/llvm/include)
 
-install(TARGETS Heap2Obj)
+install(TARGETS Heap2Obj
+  ARCHIVE DESTINATION lib)

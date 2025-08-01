@@ -36,4 +36,5 @@ target_include_directories(CFGCodeGen PRIVATE
   ${SMLNJ_LLVM_BINARY_DIR}/llvm/include
   ${SMLNJ_LLVM_SOURCE_DIR}/llvm/include)
 
-install(TARGETS CFGCodeGen)
+install(TARGETS CFGCodeGen
+  ARCHIVE DESTINATION lib)
