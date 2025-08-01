@@ -149,7 +149,7 @@ public:
     file_instream &operator= (file_instream const &) = delete;
 };
 
-//! ASDL memory outstream
+//! ASDL memory instream
 class memory_instream : public instream {
 public:
     explicit memory_instream (std::string const &data);
