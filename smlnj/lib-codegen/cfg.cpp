@@ -62,8 +62,18 @@ namespace CTypes {
     {
         delete this->_v0;
     }
-    C_STRUCT::~C_STRUCT () { }
-    C_UNION::~C_UNION () { }
+    C_STRUCT::~C_STRUCT ()
+    {
+        for (auto item : this->_v0) {
+            delete item;
+        }
+    }
+    C_UNION::~C_UNION ()
+    {
+        for (auto item : this->_v0) {
+            delete item;
+        }
+    }
     // c_type_seq pickler suppressed
     std::vector<c_type *> read_c_type_seq (asdl::instream & is)
     {
@@ -90,6 +100,9 @@ namespace CTypes {
     c_proto::~c_proto ()
     {
         delete this->_v_retTy;
+        for (auto item : this->_v_paramTys) {
+            delete item;
+        }
     }
 } // namespace CTypes
 namespace CFG_Prim {
@@ -148,7 +161,12 @@ namespace CFG_Prim {
     alloc::~alloc () { }
     SPECIAL::~SPECIAL () { }
     RECORD::~RECORD () { }
-    RAW_RECORD::~RAW_RECORD () { }
+    RAW_RECORD::~RAW_RECORD ()
+    {
+        for (auto item : this->_v_fields) {
+            delete item;
+        }
+    }
     RAW_ALLOC::~RAW_ALLOC () { }
     // pickler suppressed for arithop
     arithop read_arithop (asdl::instream & is)
@@ -466,10 +484,16 @@ namespace CFG {
     LOOKER::~LOOKER ()
     {
         delete this->_v_oper;
+        for (auto item : this->_v_args) {
+            delete item;
+        }
     }
     PURE::~PURE ()
     {
         delete this->_v_oper;
+        for (auto item : this->_v_args) {
+            delete item;
+        }
     }
     SELECT::~SELECT ()
     {
@@ -603,45 +627,89 @@ namespace CFG {
     ALLOC::~ALLOC ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
         delete this->_v3;
     }
     APPLY::~APPLY ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
+        for (auto item : this->_v2) {
+            delete item;
+        }
     }
     THROW::~THROW ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
+        for (auto item : this->_v2) {
+            delete item;
+        }
     }
-    GOTO::~GOTO () { }
+    GOTO::~GOTO ()
+    {
+        for (auto item : this->_v1) {
+            delete item;
+        }
+    }
     SWITCH::~SWITCH ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
     }
     BRANCH::~BRANCH ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
         delete this->_v3;
         delete this->_v4;
     }
     ARITH::~ARITH ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
         delete this->_v2;
         delete this->_v3;
     }
     SETTER::~SETTER ()
     {
         delete this->_v0;
+        for (auto item : this->_v1) {
+            delete item;
+        }
         delete this->_v2;
     }
     CALLGC::~CALLGC ()
     {
+        for (auto item : this->_v0) {
+            delete item;
+        }
         delete this->_v2;
     }
     RCC::~RCC ()
     {
         delete this->_v_proto;
+        for (auto item : this->_v_args) {
+            delete item;
+        }
+        for (auto item : this->_v_results) {
+            delete item;
+        }
+        for (auto item : this->_v_live) {
+            delete item;
+        }
         delete this->_v_k;
     }
     // stm_seq pickler suppressed
@@ -664,6 +732,9 @@ namespace CFG {
     }
     frag::~frag ()
     {
+        for (auto item : this->_v_params) {
+            delete item;
+        }
         delete this->_v_body;
     }
     // frag_seq pickler suppressed
@@ -689,6 +760,9 @@ namespace CFG {
     cluster::~cluster ()
     {
         delete this->_v_attrs;
+        for (auto item : this->_v_frags) {
+            delete item;
+        }
     }
     // cluster_seq pickler suppressed
     std::vector<cluster *> read_cluster_seq (asdl::instream & is)
@@ -705,5 +779,8 @@ namespace CFG {
     comp_unit::~comp_unit ()
     {
         delete this->_v_entry;
+        for (auto item : this->_v_fns) {
+            delete item;
+        }
     }
 } // namespace CFG
