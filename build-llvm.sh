@@ -93,6 +93,7 @@ ALL_TARGETS="AArch64;X86"
 case $(uname -m) in
   x86_64) TARGETS="X86" ;;
   arm64) TARGETS="AArch64" ;;
+  aarch64) TARGETS="AArch64" ;;
   *) echo "unknown hardware platform"
     exit 1
     ;;
