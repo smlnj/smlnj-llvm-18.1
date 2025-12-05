@@ -59,7 +59,7 @@ The important properties of the JWA runtime model are
   `cmake` and `llvm` sub-directories.
 
 * `LLVM-VERSION` -- specifies the version of **LLVM** that this source tree is
-  derived from (which is 18.1.6).
+  derived from (which is 18.1.8).
 
 The `build-llvm.sh` script will produce several additional directories:
 
