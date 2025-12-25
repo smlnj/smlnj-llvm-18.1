@@ -211,6 +211,6 @@ if [ x"$CONFIG_ONLY" = xno ] ; then
 
   echo "build-llvm.sh: building LLVM on $NPROCS cores"
   echo "  $GENERATOR -j $NPROCS install"
-  time $GENERATOR -j $NPROCS install
+  $GENERATOR -j $NPROCS install
 
 fi
