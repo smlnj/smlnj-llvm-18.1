@@ -5,6 +5,9 @@ calling convention.  It is meant to be used as a submodule for the development
 branch of [**Standard ML of New Jersey** (**SML/NJ**)](https://smlnj.org) and is based on **LLVM**
 version 18.1.8.
 
+**NOTE** we are no longer using this version of **LLVM**.  As of 2026-03-12, we are using a patched
+version of [**LLVM** 21.1](https://github.com/smlnj/smlnj-llvm-21.1).
+
 ## Removed components
 
 To reduce the size of the repository, we have removed the following unused (by SML/NJ)
